@@ -700,30 +700,35 @@
                 </div>
 
                 ${data.model_info ? `
-                <div class="model-info" style="background: ${data.model_info.class_accuracy >= 80 ? '#d4edda' : data.model_info.class_accuracy >= 50 ? '#fff3cd' : '#f8d7da'}; border-left: 4px solid ${data.model_info.class_accuracy >= 80 ? '#28a745' : data.model_info.class_accuracy >= 50 ? '#ffc107' : '#dc3545'}; padding: 15px; margin-top: 20px; border-radius: 8px;">
-                    <h3 style="color: ${data.model_info.class_accuracy >= 80 ? '#155724' : data.model_info.class_accuracy >= 50 ? '#856404' : '#721c24'}; margin-bottom: 10px;">
-                        ${data.model_info.class_accuracy >= 80 ? '✅' : data.model_info.class_accuracy >= 50 ? '⚠️' : '❌'} Informasi Akurasi Prediksi
+                <div class="model-info" style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin-top: 20px; border-radius: 8px;">
+                    <h3 style="color: #721c24; margin-bottom: 10px;">
+                        ⚠️ Peringatan Akurasi Model
                     </h3>
-                    <p style="color: ${data.model_info.class_accuracy >= 80 ? '#155724' : data.model_info.class_accuracy >= 50 ? '#856404' : '#721c24'}; margin-bottom: 8px;">
-                        <strong>Prediksi:</strong> ${data.model_info.predicted_class}
+                    <div style="background: #fff; padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #f5c6cb;">
+                        <p style="color: #721c24; margin-bottom: 8px; font-weight: bold;">
+                            ${data.model_info.warning}
+                        </p>
+                    </div>
+                    <p style="color: #721c24; margin-bottom: 8px;">
+                        <strong>Prediksi Model:</strong> ${data.model_info.predicted_class}
                     </p>
-                    <p style="color: ${data.model_info.class_accuracy >= 80 ? '#155724' : data.model_info.class_accuracy >= 50 ? '#856404' : '#721c24'}; margin-bottom: 8px;">
-                        <strong>Akurasi untuk "${data.model_info.predicted_class}":</strong> ${data.model_info.class_accuracy}%
+                    <p style="color: #721c24; margin-bottom: 8px;">
+                        <strong>Confidence Score:</strong> ${data.model_info.prediction_confidence}%
                     </p>
-                    <p style="color: ${data.model_info.class_accuracy >= 80 ? '#155724' : data.model_info.class_accuracy >= 50 ? '#856404' : '#721c24'}; margin-bottom: 8px;">
-                        <strong>Reliabilitas:</strong> ${data.model_info.reliability}
+                    <p style="color: #721c24; margin-bottom: 8px;">
+                        <strong>Reliabilitas Prediksi:</strong> <span style="color: #dc3545; font-weight: bold;">${data.model_info.reliability}</span>
                     </p>
-                    <p style="color: ${data.model_info.class_accuracy >= 80 ? '#155724' : data.model_info.class_accuracy >= 50 ? '#856404' : '#721c24'}; margin-bottom: 8px;">
+                    <p style="color: #721c24; margin-bottom: 8px;">
                         <strong>Akurasi Keseluruhan Model:</strong> ${data.model_info.overall_accuracy}%
                     </p>
-                    <p style="color: ${data.model_info.class_accuracy >= 80 ? '#155724' : data.model_info.class_accuracy >= 50 ? '#856404' : '#721c24'}; margin-bottom: 8px;">
+                    <p style="color: #721c24; margin-bottom: 8px;">
                         <strong>Status Model:</strong> ${data.model_info.status}
                     </p>
-                    <p style="color: ${data.model_info.class_accuracy >= 80 ? '#155724' : data.model_info.class_accuracy >= 50 ? '#856404' : '#721c24'}; margin-bottom: 8px;">
-                        <strong>Dataset:</strong> ${data.model_info.dataset_size}/${data.model_info.dataset_target} gambar
+                    <p style="color: #721c24; margin-bottom: 8px;">
+                        <strong>Dataset Training:</strong> ${data.model_info.dataset_size}/${data.model_info.dataset_target} gambar (${Math.round(data.model_info.dataset_size/data.model_info.dataset_target*100)}% dari target)
                     </p>
-                    <p style="color: ${data.model_info.class_accuracy >= 80 ? '#155724' : data.model_info.class_accuracy >= 50 ? '#856404' : '#721c24'}; font-size: 0.9em; font-style: italic; margin-top: 10px; padding-top: 10px; border-top: 1px solid ${data.model_info.class_accuracy >= 80 ? '#c3e6cb' : data.model_info.class_accuracy >= 50 ? '#ffeaa7' : '#f5c6cb'};">
-                        ${data.model_info.note}
+                    <p style="color: #721c24; font-size: 0.9em; font-style: italic; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f5c6cb;">
+                        💡 ${data.model_info.note}
                     </p>
                 </div>
                 ` : ''}

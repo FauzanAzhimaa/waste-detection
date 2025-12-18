@@ -551,9 +551,20 @@ class WasteDetectionApp:
             else:
                 print(f"📁 Files kept in temp folder for viewing: {filename}")
             
-            # Get class-specific accuracy
+            # Get prediction confidence and determine reliability
             predicted_class = result['class']
-            class_accuracy = Config.CLASS_ACCURACY.get(predicted_class, 0.0)
+            confidence = result['confidence']
+            
+            # Determine reliability based on overall model accuracy and confidence
+            # Since model has 40.54% accuracy and is biased, all predictions are unreliable
+            reliability = 'Rendah'
+            reliability_color = 'danger'
+            
+            # Warning message based on model bias
+            if predicted_class == 'Tumpukan Parah':
+                warning = f'⚠️ Model cenderung memprediksi semua gambar sebagai "Tumpukan Parah" (bias). Akurasi keseluruhan hanya {Config.MODEL_ACCURACY}%. Prediksi ini mungkin TIDAK AKURAT.'
+            else:
+                warning = f'⚠️ Model jarang memprediksi "{predicted_class}" dengan benar. Akurasi keseluruhan hanya {Config.MODEL_ACCURACY}%. Prediksi ini kemungkinan TIDAK AKURAT.'
             
             # Prepare response
             response = {
@@ -570,16 +581,18 @@ class WasteDetectionApp:
                 'timestamp': timestamp,
                 'campus': Config.CAMPUS_SHORT,
                 'using_database': Config.USE_DATABASE,
-                # Model performance info
+                # Model performance info - honest assessment
                 'model_info': {
                     'overall_accuracy': Config.MODEL_ACCURACY,
-                    'class_accuracy': class_accuracy,
                     'predicted_class': predicted_class,
+                    'prediction_confidence': round(confidence * 100, 1),
                     'status': Config.MODEL_STATUS,
                     'dataset_size': Config.DATASET_SIZE,
                     'dataset_target': Config.DATASET_TARGET,
-                    'reliability': 'Tinggi' if class_accuracy >= 80 else 'Sedang' if class_accuracy >= 50 else 'Rendah',
-                    'note': f'Prediksi "{predicted_class}" memiliki akurasi {class_accuracy}% pada test set. Model masih {Config.MODEL_STATUS.lower()} (dataset: {Config.DATASET_SIZE}/{Config.DATASET_TARGET} gambar).'
+                    'reliability': reliability,
+                    'reliability_color': reliability_color,
+                    'warning': warning,
+                    'note': f'Model masih {Config.MODEL_STATUS.lower()} dengan akurasi keseluruhan {Config.MODEL_ACCURACY}% (dataset: {Config.DATASET_SIZE}/{Config.DATASET_TARGET} gambar). Prediksi mungkin tidak akurat dan perlu verifikasi manual.'
                 }
             }
             
