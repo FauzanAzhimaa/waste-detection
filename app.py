@@ -49,10 +49,17 @@ class Config:
     CLASS_NAMES = ['Bersih', 'Tumpukan Parah', 'Tumpukan Ringan']
     
     # Model Performance Metrics (from model_analysis_report.json)
-    MODEL_ACCURACY = 40.54  # Test accuracy in percentage
+    MODEL_ACCURACY = 40.54  # Overall test accuracy in percentage
     MODEL_STATUS = "PROTOTYPE"  # PROTOTYPE, PRODUCTION, EXPERIMENTAL
     DATASET_SIZE = 236  # Total images used for training
     DATASET_TARGET = 900  # Target dataset size for production
+    
+    # Per-class accuracy (from confusion matrix analysis)
+    CLASS_ACCURACY = {
+        'Bersih': 0.0,  # 0% - Model cannot detect clean areas
+        'Tumpukan Parah': 100.0,  # 100% - But due to bias (predicts everything as this)
+        'Tumpukan Ringan': 0.0  # 0% - Model cannot detect light waste
+    }
     
     # Kampus 1 UNJANI Yogyakarta specific settings
     CAMPUS_NAME = "Kampus 1 Universitas Jenderal Achmad Yani Yogyakarta"
@@ -544,6 +551,10 @@ class WasteDetectionApp:
             else:
                 print(f"📁 Files kept in temp folder for viewing: {filename}")
             
+            # Get class-specific accuracy
+            predicted_class = result['class']
+            class_accuracy = Config.CLASS_ACCURACY.get(predicted_class, 0.0)
+            
             # Prepare response
             response = {
                 'success': True,
@@ -561,11 +572,14 @@ class WasteDetectionApp:
                 'using_database': Config.USE_DATABASE,
                 # Model performance info
                 'model_info': {
-                    'accuracy': Config.MODEL_ACCURACY,
+                    'overall_accuracy': Config.MODEL_ACCURACY,
+                    'class_accuracy': class_accuracy,
+                    'predicted_class': predicted_class,
                     'status': Config.MODEL_STATUS,
                     'dataset_size': Config.DATASET_SIZE,
                     'dataset_target': Config.DATASET_TARGET,
-                    'note': f'Model masih dalam tahap {Config.MODEL_STATUS.lower()} dengan akurasi {Config.MODEL_ACCURACY}% (dataset: {Config.DATASET_SIZE}/{Config.DATASET_TARGET} gambar)'
+                    'reliability': 'Tinggi' if class_accuracy >= 80 else 'Sedang' if class_accuracy >= 50 else 'Rendah',
+                    'note': f'Prediksi "{predicted_class}" memiliki akurasi {class_accuracy}% pada test set. Model masih {Config.MODEL_STATUS.lower()} (dataset: {Config.DATASET_SIZE}/{Config.DATASET_TARGET} gambar).'
                 }
             }
             
