@@ -189,6 +189,7 @@ class WasteDetectionModel:
         """Generate Grad-CAM heatmap - memory efficient version"""
         try:
             print(f"🔥 Starting Grad-CAM generation...")
+            print(f"📊 Model layers: {len(self.model.layers)} total")
             
             # Load original image
             img_pil = Image.open(image_path).convert('RGB')
@@ -209,24 +210,48 @@ class WasteDetectionModel:
             img_array = np.array(img_resized, dtype=np.float32) / 255.0
             img_batch = np.expand_dims(img_array, 0)
             
-            # Find last conv layer - simplified approach
+            # Find last conv layer - multiple strategies
             target_layer = None
             layer_name = None
             
-            # Try to find the last conv layer in MobileNetV2
+            # Strategy 1: Try to find last conv layer in nested MobileNetV2
             for layer in reversed(self.model.layers):
                 if hasattr(layer, 'layers'):
                     # It's a nested model (MobileNetV2)
                     for sublayer in reversed(layer.layers):
-                        if 'conv' in sublayer.name.lower() and 'pw' in sublayer.name.lower():
+                        if 'conv' in sublayer.name.lower():
                             target_layer = sublayer
                             layer_name = sublayer.name
+                            print(f"✓ Found nested conv layer: {layer_name}")
                             break
                     if target_layer:
                         break
             
+            # Strategy 2: If not found, try direct model layers
+            if not target_layer:
+                for layer in reversed(self.model.layers):
+                    if 'conv' in layer.__class__.__name__.lower():
+                        target_layer = layer
+                        layer_name = layer.name
+                        print(f"✓ Found direct conv layer: {layer_name}")
+                        break
+            
+            # Strategy 3: Use any layer with output shape (None, H, W, C)
+            if not target_layer:
+                for layer in reversed(self.model.layers):
+                    try:
+                        output_shape = layer.output_shape
+                        if len(output_shape) == 4:  # (batch, height, width, channels)
+                            target_layer = layer
+                            layer_name = layer.name
+                            print(f"✓ Found 4D output layer: {layer_name}")
+                            break
+                    except:
+                        continue
+            
             if not target_layer:
                 print("❌ No suitable conv layer found")
+                print(f"📋 Available layers: {[l.name for l in self.model.layers[:5]]}...")
                 return None
             
             print(f"✓ Using layer: {layer_name}")
