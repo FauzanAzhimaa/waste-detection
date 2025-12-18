@@ -667,8 +667,11 @@ class WasteDetectionApp:
         print("=" * 60)
         print(f"📍 Server: http://localhost:{port}")
         print(f"📁 Model: {Config.MODEL_PATH}")
-        print(f"📂 Uploads: {Config.UPLOAD_FOLDER}")
-        print(f"🔥 Heatmaps: {Config.HEATMAP_FOLDER}")
+        print(f"📂 Temp: {Config.TEMP_FOLDER}")
+        if Config.USE_DATABASE:
+            print(f"💾 Storage: PostgreSQL + Cloudinary")
+        else:
+            print(f"💾 Storage: JSON file (fallback)")
         print("=" * 60)
         self.app.run(debug=debug, host=host, port=port, use_reloader=False)
 
