@@ -1,0 +1,14 @@
+tensorflow>=2.10
+numpy
+pandas
+matplotlib
+scikit-learn
+opencv-python-headless
+flask
+Pillow
+seaborn
+gunicorn
+psycopg2-binary
+sqlalchemy
+cloudinary
+gdown

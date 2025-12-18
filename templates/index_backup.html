@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deteksi Tumpukan Sampah - AI Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .main-layout.split {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #previewImage {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        #result {
+            margin-top: 20px;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .result-header.success {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+        }
+
+        .result-header.warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+        }
+
+        .result-header.danger {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+        }
+
+        .result-class {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .result-confidence {
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+
+        .probabilities {
+            margin-top: 20px;
+        }
+
+        .prob-item {
+            margin-bottom: 15px;
+        }
+
+        .prob-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .prob-bar {
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .prob-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .recommendation {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .recommendation h3 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .recommendation p {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .heatmap-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .heatmap-section h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .upload-section {
+            transition: all 0.3s ease;
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .result-images {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .result-analysis {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .image-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .image-card img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .image-card p {
+            margin-top: 10px;
+            font-weight: 500;
+            color: #667eea;
+        }
+
+        .back-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .back-button:hover {
+            background: #5a6268;
+        }
+
+        @media (max-width: 968px) {
+            .main-layout.split {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 5px solid #dc3545;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗑️ Deteksi Tumpukan Sampah</h1>
+            <p>Sistem AI untuk Deteksi dan Klasifikasi Sampah</p>
+            <p style="font-size: 1.2em; margin-top: 10px;">📍 Kampus 1 Universitas Jenderal Achmad Yani Yogyakarta</p>
+        </div>
+
+        <div class="card">
+            <div class="location-input-wrapper">
+                <label for="locationInput" style="display: block; margin-bottom: 10px; font-weight: 500; color: #333;">
+                    📍 Lokasi di Kampus 1 UNJANI Yogyakarta (Opsional):
+                </label>
+                <input 
+                    type="text" 
+                    id="locationInput" 
+                    list="locationSuggestions"
+                    placeholder="Contoh: Ruang Kelas 2H, Lab 3A, Kantin"
+                    style="width: 100%; padding: 12px; border: 2px solid #667eea; border-radius: 8px; font-size: 1em;"
+                >
+                <p style="margin-top: 8px; font-size: 0.9em; color: #666;">
+                    💡 Kosongkan untuk deteksi GPS otomatis dari metadata foto
+                </p>
+                <datalist id="locationSuggestions">
+                    <option value="Ruang Kelas 2H">
+                    <option value="Ruang Kelas 2G">
+                    <option value="Ruang Kelas 3A">
+                    <option value="Lab Komputer 3A">
+                    <option value="Lab Komputer 3B">
+                    <option value="Lab Bahasa">
+                    <option value="Kantin">
+                    <option value="Perpustakaan">
+                    <option value="Masjid">
+                    <option value="Parkiran Motor">
+                    <option value="Parkiran Mobil">
+                    <option value="Taman Depan">
+                    <option value="Taman Belakang">
+                    <option value="Koridor Lantai 1">
+                    <option value="Koridor Lantai 2">
+                    <option value="Koridor Lantai 3">
+                    <option value="Toilet Lantai 1">
+                    <option value="Toilet Lantai 2">
+                    <option value="Toilet Lantai 3">
+                    <option value="Ruang Dosen">
+                    <option value="Aula">
+                </datalist>
+            </div>
+
+            <div class="main-content">
+                <div class="left-panel">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📸</div>
+                        <h3>Klik atau Drag & Drop Gambar</h3>
+                        <p>Format: JPG, PNG, WEBP (Max 16MB)</p>
+                        <input type="file" id="fileInput" accept="image/*">
+                        <button class="btn" onclick="document.getElementById('fileInput').click()">
+                            Pilih Gambar
+                        </button>
+                    </div>
+
+                    <div class="image-preview-large" id="previewLarge" style="display: none;"></div>
+
+                    <div class="heatmap-grid" id="heatmapGrid" style="display: none;"></div>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 10px;">Menganalisis gambar...</p>
+                    </div>
+                </div>
+
+                <div class="right-panel" id="rightPanel">
+                    <button class="back-button" onclick="resetView()">← Kembali</button>
+                    <div id="result"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Sistem Deteksi Sampah Kampus 1 UNJANI Yogyakarta | Powered by TensorFlow & Flask</p>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('File harus berupa gambar!');
+                return;
+            }
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.innerHTML = `<img id="previewImage" src="${e.target.result}" alt="Preview">`;
+            };
+            reader.readAsDataURL(file);
+
+            // Upload and predict
+            uploadAndPredict(file);
+        }
+
+        function uploadAndPredict(file) {
+            const location = document.getElementById('locationInput').value.trim();
+
+            const formData = new FormData();
+            formData.append('file', file);
+            if (location) {
+                formData.append('location', location);
+            }
+
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                if (data.success) {
+                    displayResult(data);
+                } else {
+                    showError(data.error || 'Terjadi kesalahan');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                showError('Gagal menghubungi server: ' + error.message);
+            });
+        }
+
+        function displayResult(data) {
+            const pred = data.prediction;
+            const rec = data.recommendation;
+            
+            const statusClass = rec.status;
+            const confidence = (pred.confidence * 100).toFixed(1);
+
+            // Switch to split layout
+            document.getElementById('mainLayout').classList.add('split');
+            document.getElementById('resultSection').classList.add('active');
+
+            // Build images HTML
+            let imagesHtml = `
+                <div class="result-images">
+                    <div class="image-card">
+                        <img src="/uploads/${data.filename}" alt="Original">
+                        <p>📸 Gambar Original</p>
+                    </div>
+                    ${data.heatmap_filename ? `
+                        <div class="image-card">
+                            <img src="/uploads/${data.heatmap_filename}" alt="Heatmap">
+                            <p>🔥 Area Deteksi AI (Heatmap)</p>
+                            <p style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                                Area merah/kuning = fokus AI
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            // Update preview section with images
+            document.getElementById('preview').innerHTML = imagesHtml;
+
+            // Build analysis HTML
+            let html = `
+                <div class="result-header ${statusClass}">
+                    <div>
+                        <div class="result-class">${pred.class}</div>
+                        <div class="result-confidence">Confidence: ${confidence}% (${rec.confidence_level})</div>
+                        ${data.location ? `<div style="margin-top: 10px; font-size: 1em;">📍 Lokasi: <strong>${data.location}</strong></div>` : ''}
+                    </div>
+                </div>
+
+                <div class="result-analysis">
+                    <div class="probabilities">
+                        <h3>📊 Probabilitas Klasifikasi:</h3>
+            `;
+
+            // Sort probabilities
+            const probs = Object.entries(pred.probabilities)
+                .sort((a, b) => b[1] - a[1]);
+
+            probs.forEach(([className, prob]) => {
+                const percentage = (prob * 100).toFixed(1);
+                html += `
+                    <div class="prob-item">
+                        <div class="prob-label">
+                            <span>${className}</span>
+                            <span>${percentage}%</span>
+                        </div>
+                        <div class="prob-bar">
+                            <div class="prob-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+
+                    <div class="recommendation">
+                        <h3>📋 Rekomendasi untuk ${rec.campus}</h3>
+                        ${data.location ? `<p><strong>📍 Lokasi:</strong> ${data.location}</p>` : ''}
+                        ${data.gps ? `<p style="font-size: 0.9em; color: #666;"><strong>🌍 GPS:</strong> <a href="https://www.google.com/maps?q=${data.gps.latitude},${data.gps.longitude}" target="_blank" style="color: #667eea;">Lihat di Google Maps</a></p>` : ''}
+                        <p><strong>Status:</strong> ${rec.message}</p>
+                        <p><strong>Tindakan:</strong> ${rec.action}</p>
+                        <p><strong>Prioritas:</strong> ${rec.priority.toUpperCase()}</p>
+                        <p><strong>PIC:</strong> ${rec.pic}</p>
+                        ${data.timestamp ? `<p style="margin-top: 10px; font-size: 0.9em; color: #666;"><strong>Waktu Deteksi:</strong> ${formatTimestamp(data.timestamp)}</p>` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('result').innerHTML = html;
+        }
+
+        function resetView() {
+            document.getElementById('mainLayout').classList.remove('split');
+            document.getElementById('resultSection').classList.remove('active');
+            document.getElementById('preview').innerHTML = '';
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('fileInput').value = '';
+        }
+
+        function showError(message) {
+            result.innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+
+        function formatTimestamp(timestamp) {
+            // Format: YYYYMMDD_HHMMSS to readable format
+            const year = timestamp.substring(0, 4);
+            const month = timestamp.substring(4, 6);
+            const day = timestamp.substring(6, 8);
+            const hour = timestamp.substring(9, 11);
+            const minute = timestamp.substring(11, 13);
+            const second = timestamp.substring(13, 15);
+            return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+        }
+    </script>
+</body>
+</html>

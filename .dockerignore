@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+uploads/
+temp/
+raw_data/
+raw_data_backup_small/
+raw_images_jpg/
+notebooks/
+outputs/
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+detection_logs.json
+
+# Large files
+*.h5.backup
+*.zip
+*.tar.gz

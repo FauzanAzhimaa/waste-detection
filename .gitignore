@@ -1,0 +1,50 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Data folders (LARGE!)
+raw_data/
+raw_data_backup_small/
+raw_images_jpg/
+data/train/
+data/val/
+data/test/
+
+# Uploads (generated files)
+uploads/*.jpeg
+uploads/*.jpg
+uploads/*.png
+uploads/*.webp
+uploads/heatmaps/
+
+# Outputs
+outputs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Keep these important files
+!models/waste_mobilenet.h5
+!requirements.txt
+!.gitignore
+!.railwayignore

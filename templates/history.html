@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Deteksi - Kampus 1 UNJANI Yogyakarta</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .nav-buttons {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.4);
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            opacity: 0.9;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filters input, .filters select {
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 1em;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .header p {
+                font-size: 0.9em;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+                margin: 5px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-card h3 {
+                font-size: 1.5em;
+            }
+
+            .stat-card p {
+                font-size: 0.85em;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filters input, .filters select {
+                min-width: 100%;
+            }
+
+            th, td {
+                padding: 8px;
+                font-size: 0.85em;
+            }
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Riwayat Deteksi Sampah</h1>
+            <p>Kampus 1 Universitas Jenderal Achmad Yani Yogyakarta</p>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/" class="btn">🏠 Kembali ke Deteksi</a>
+            <button class="btn" onclick="exportToCSV()">📥 Export CSV</button>
+        </div>
+
+        <div class="card">
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <h3 id="totalDetections">0</h3>
+                    <p>Total Deteksi</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="cleanCount">0</h3>
+                    <p>Bersih</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="lightCount">0</h3>
+                    <p>Tumpukan Ringan</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="severeCount">0</h3>
+                    <p>Tumpukan Parah</p>
+                </div>
+            </div>
+
+            <div class="filters">
+                <input type="text" id="searchLocation" placeholder="🔍 Cari lokasi..." onkeyup="filterTable()">
+                <select id="filterClass" onchange="filterTable()">
+                    <option value="">Semua Kategori</option>
+                    <option value="Bersih">Bersih</option>
+                    <option value="Tumpukan Ringan">Tumpukan Ringan</option>
+                    <option value="Tumpukan Parah">Tumpukan Parah</option>
+                </select>
+                <input type="date" id="filterDate" onchange="filterTable()">
+            </div>
+
+            <div id="loading" class="loading">
+                <p>Memuat data...</p>
+            </div>
+
+            <div id="tableContainer" style="display: none;">
+                <div class="table-wrapper">
+                    <table id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Waktu</th>
+                                <th>Lokasi</th>
+                                <th>Kategori</th>
+                                <th>Confidence</th>
+                                <th>Prioritas</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="noData" class="no-data" style="display: none;">
+                <p>Belum ada data deteksi</p>
+            </div>
+        </div>
+
+        <div class="card" style="background: #fff3cd; border-left: 5px solid #ffc107; padding: 20px; margin-top: 20px;">
+            <h3 style="color: #856404; margin-bottom: 10px;">ℹ️ Informasi Penting</h3>
+            <p style="color: #856404; line-height: 1.6;">
+                <strong>Waktu:</strong> Semua waktu ditampilkan dalam WIB (Waktu Indonesia Barat / UTC+7)<br>
+                <strong>Penyimpanan Data:</strong> Di Railway, data riwayat tersimpan di <code>detection_logs.json</code>. 
+                Data akan hilang jika server restart karena ephemeral filesystem. 
+                Untuk penyimpanan permanen, gunakan database eksternal atau export CSV secara berkala.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Sistem Deteksi Sampah Kampus 1 UNJANI Yogyakarta</p>
+        </div>
+    </div>
+
+    <script>
+        let allLogs = [];
+
+        async function loadLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                allLogs = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                
+                if (allLogs.length === 0) {
+                    document.getElementById('noData').style.display = 'block';
+                } else {
+                    document.getElementById('tableContainer').style.display = 'block';
+                    updateStats();
+                    displayLogs(allLogs);
+                }
+            } catch (error) {
+                document.getElementById('loading').innerHTML = '<p style="color: red;">Error loading data</p>';
+            }
+        }
+
+        function updateStats() {
+            const total = allLogs.length;
+            const clean = allLogs.filter(log => log.prediction.class === 'Bersih').length;
+            const light = allLogs.filter(log => log.prediction.class === 'Tumpukan Ringan').length;
+            const severe = allLogs.filter(log => log.prediction.class === 'Tumpukan Parah').length;
+
+            document.getElementById('totalDetections').textContent = total;
+            document.getElementById('cleanCount').textContent = clean;
+            document.getElementById('lightCount').textContent = light;
+            document.getElementById('severeCount').textContent = severe;
+        }
+
+        function displayLogs(logs) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            logs.forEach(log => {
+                const row = document.createElement('tr');
+                const timestamp = formatTimestamp(log.timestamp);
+                const className = log.prediction.class;
+                const confidence = (log.prediction.confidence * 100).toFixed(1);
+                const priority = log.recommendation.priority;
+                
+                let badgeClass = 'badge-success';
+                if (className === 'Tumpukan Ringan') badgeClass = 'badge-warning';
+                if (className === 'Tumpukan Parah') badgeClass = 'badge-danger';
+
+                row.innerHTML = `
+                    <td>${timestamp}</td>
+                    <td><strong>${log.location}</strong></td>
+                    <td><span class="badge ${badgeClass}">${className}</span></td>
+                    <td>${confidence}%</td>
+                    <td>${priority.toUpperCase()}</td>
+                    <td>
+                        <a href="/uploads/${log.filename}" target="_blank" style="color: #667eea; text-decoration: none;">📷 Lihat</a>
+                        ${log.heatmap_filename ? ` | <a href="/uploads/${log.heatmap_filename}" target="_blank" style="color: #667eea; text-decoration: none;">🔥 Heatmap</a>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterTable() {
+            const searchLocation = document.getElementById('searchLocation').value.toLowerCase();
+            const filterClass = document.getElementById('filterClass').value;
+            const filterDate = document.getElementById('filterDate').value;
+
+            const filtered = allLogs.filter(log => {
+                const matchLocation = log.location.toLowerCase().includes(searchLocation);
+                const matchClass = !filterClass || log.prediction.class === filterClass;
+                const matchDate = !filterDate || log.timestamp.startsWith(filterDate.replace(/-/g, ''));
+                
+                return matchLocation && matchClass && matchDate;
+            });
+
+            displayLogs(filtered);
+        }
+
+        function formatTimestamp(timestamp) {
+            const year = timestamp.substring(0, 4);
+            const month = timestamp.substring(4, 6);
+            const day = timestamp.substring(6, 8);
+            const hour = timestamp.substring(9, 11);
+            const minute = timestamp.substring(11, 13);
+            const second = timestamp.substring(13, 15);
+            return `${day}/${month}/${year} ${hour}:${minute}:${second} WIB`;
+        }
+
+        function exportToCSV() {
+            let csv = 'Waktu,Lokasi,Kategori,Confidence,Prioritas,PIC\n';
+            
+            allLogs.forEach(log => {
+                const timestamp = formatTimestamp(log.timestamp);
+                const location = log.location;
+                const className = log.prediction.class;
+                const confidence = (log.prediction.confidence * 100).toFixed(1);
+                const priority = log.recommendation.priority;
+                const pic = log.recommendation.pic;
+                
+                csv += `"${timestamp}","${location}","${className}","${confidence}%","${priority}","${pic}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `deteksi_sampah_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        // Load logs on page load
+        loadLogs();
+    </script>
+</body>
+</html>
