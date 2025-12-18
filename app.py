@@ -473,8 +473,8 @@ class WasteDetectionApp:
                 'location': location,
                 'gps': gps_data,
                 'filename': filename,
-                'image_url': image_url or f"/temp/{filename}",  # Fallback to temp URL
-                'heatmap_url': heatmap_url,
+                'image_url': image_url or f"/uploads/{filename}",  # Fallback to /uploads route
+                'heatmap_url': heatmap_url or (f"/uploads/{heatmap_filename}" if heatmap_filename else None),
                 'heatmap_filename': heatmap_filename,
                 'prediction': result,
                 'recommendation': recommendation,
@@ -482,22 +482,26 @@ class WasteDetectionApp:
             }
             self._save_detection_log(log_data)
             
-            # Cleanup temp files
-            try:
-                if temp_filepath and temp_filepath.exists():
-                    temp_filepath.unlink()
-                if temp_heatmap_path and temp_heatmap_path.exists():
-                    temp_heatmap_path.unlink()
-                print("✓ Temp files cleaned up")
-            except Exception as e:
-                print(f"⚠️ Cleanup error: {e}")
+            # Cleanup temp files ONLY if uploaded to cloud
+            # Keep files in temp folder for localhost viewing
+            if Config.USE_DATABASE and image_url:
+                try:
+                    if temp_filepath and temp_filepath.exists():
+                        temp_filepath.unlink()
+                    if temp_heatmap_path and temp_heatmap_path.exists():
+                        temp_heatmap_path.unlink()
+                    print("✓ Temp files cleaned up (uploaded to cloud)")
+                except Exception as e:
+                    print(f"⚠️ Cleanup error: {e}")
+            else:
+                print(f"📁 Files kept in temp folder for viewing: {filename}")
             
             # Prepare response
             response = {
                 'success': True,
                 'filename': filename,
-                'image_url': image_url,
-                'heatmap_url': heatmap_url,
+                'image_url': image_url or f"/uploads/{filename}",  # Use /uploads route for localhost
+                'heatmap_url': heatmap_url or (f"/uploads/{heatmap_filename}" if heatmap_filename else None),
                 'heatmap_filename': heatmap_filename,
                 'heatmap_error': heatmap_error,
                 'location': location,
