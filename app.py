@@ -214,11 +214,24 @@ class WasteDetectionModel:
             target_layer = None
             layer_name = None
             
-            # Strategy 1: Try to find last conv layer in nested MobileNetV2
+            # Strategy 1: Try to find specific good layers in MobileNetV2
+            # block_16 or block_15 usually give better results than the very last layer
+            preferred_layers = ['block_16', 'block_15', 'block_14', 'Conv_1']
+            
             for layer in reversed(self.model.layers):
                 if hasattr(layer, 'layers'):
                     # It's a nested model (MobileNetV2)
                     for sublayer in reversed(layer.layers):
+                        # First try preferred layers
+                        for pref in preferred_layers:
+                            if pref.lower() in sublayer.name.lower():
+                                target_layer = sublayer
+                                layer_name = sublayer.name
+                                print(f"✓ Found preferred layer: {layer_name}")
+                                break
+                        if target_layer:
+                            break
+                        # Fallback to any conv layer
                         if 'conv' in sublayer.name.lower():
                             target_layer = sublayer
                             layer_name = sublayer.name
@@ -290,14 +303,18 @@ class WasteDetectionModel:
             
             print(f"✓ Heatmap computed, shape: {heatmap.shape}")
             
+            # Apply threshold to focus on important areas (top 30% activation)
+            threshold = np.percentile(heatmap, 70)
+            heatmap_focused = np.where(heatmap >= threshold, heatmap, heatmap * 0.3)
+            
             # Resize heatmap to original image size
-            heatmap_resized = cv2.resize(heatmap, original_size)
+            heatmap_resized = cv2.resize(heatmap_focused, original_size)
             heatmap_colored = cv2.applyColorMap(np.uint8(255 * heatmap_resized), cv2.COLORMAP_JET)
             heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
             
-            # Create overlay with original size image
+            # Create overlay with higher heatmap intensity
             original_array = np.array(img_pil, dtype=np.float32)
-            overlay = heatmap_colored * 0.6 + original_array * 0.4
+            overlay = heatmap_colored * 0.7 + original_array * 0.3
             overlay = np.clip(overlay, 0, 255).astype(np.uint8)
             
             print("✓ Heatmap generated successfully")
