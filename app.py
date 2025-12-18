@@ -141,26 +141,41 @@ class WasteDetectionModel:
         self._load_model()
     
     def _load_model(self):
-        """Load the trained model with TensorFlow workaround"""
+        """Load the trained model with TensorFlow workaround for Railway"""
         if not self.model_path.exists():
             raise FileNotFoundError(f"Model not found at {self.model_path}")
         
         try:
-            # Workaround for TensorFlow memory issue on Railway
+            # Aggressive memory optimization for Railway free tier (512MB)
             import gc
             gc.collect()
             
-            # Disable GPU to prevent CUDA errors
+            # Disable GPU completely to prevent CUDA errors
+            import os
+            os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+            
             try:
                 tf.config.set_visible_devices([], 'GPU')
-            except:
-                pass  # Ignore if GPU config fails
+                # Limit TensorFlow memory growth
+                physical_devices = tf.config.list_physical_devices('CPU')
+                if physical_devices:
+                    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+            except Exception as e:
+                print(f"⚠️ GPU config warning (ignored): {e}")
             
-            # Load model - simple and clean
+            # Load model with minimal memory footprint
             print(f"📦 Loading model from {self.model_path}...")
-            self.model = tf.keras.models.load_model(str(self.model_path), compile=False)
+            print(f"💾 Memory optimization: CPU-only mode")
             
-            print(f"✓ Model loaded successfully")
+            self.model = tf.keras.models.load_model(
+                str(self.model_path), 
+                compile=False  # Don't compile to save memory
+            )
+            
+            print(f"✓ Model loaded successfully (CPU mode)")
+            
+            # Force garbage collection after load
+            gc.collect()
             
         except Exception as e:
             print(f"❌ Error loading model: {e}")
