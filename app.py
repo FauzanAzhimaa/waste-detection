@@ -48,6 +48,12 @@ class Config:
     IMAGE_SIZE = (224, 224)
     CLASS_NAMES = ['Bersih', 'Tumpukan Parah', 'Tumpukan Ringan']
     
+    # Model Performance Metrics (from model_analysis_report.json)
+    MODEL_ACCURACY = 40.54  # Test accuracy in percentage
+    MODEL_STATUS = "PROTOTYPE"  # PROTOTYPE, PRODUCTION, EXPERIMENTAL
+    DATASET_SIZE = 236  # Total images used for training
+    DATASET_TARGET = 900  # Target dataset size for production
+    
     # Kampus 1 UNJANI Yogyakarta specific settings
     CAMPUS_NAME = "Kampus 1 Universitas Jenderal Achmad Yani Yogyakarta"
     CAMPUS_SHORT = "Kampus 1 UNJANI Yogyakarta"
@@ -552,7 +558,15 @@ class WasteDetectionApp:
                 'recommendation': recommendation,
                 'timestamp': timestamp,
                 'campus': Config.CAMPUS_SHORT,
-                'using_database': Config.USE_DATABASE
+                'using_database': Config.USE_DATABASE,
+                # Model performance info
+                'model_info': {
+                    'accuracy': Config.MODEL_ACCURACY,
+                    'status': Config.MODEL_STATUS,
+                    'dataset_size': Config.DATASET_SIZE,
+                    'dataset_target': Config.DATASET_TARGET,
+                    'note': f'Model masih dalam tahap {Config.MODEL_STATUS.lower()} dengan akurasi {Config.MODEL_ACCURACY}% (dataset: {Config.DATASET_SIZE}/{Config.DATASET_TARGET} gambar)'
+                }
             }
             
             return jsonify(response)

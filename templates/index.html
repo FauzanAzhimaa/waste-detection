@@ -698,6 +698,16 @@
                     <p><strong>Prioritas:</strong> ${rec.priority.toUpperCase()}</p>
                     <p><strong>PIC:</strong> ${rec.pic}</p>
                 </div>
+
+                ${data.model_info ? `
+                <div class="model-info" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-top: 20px; border-radius: 8px;">
+                    <h3 style="color: #856404; margin-bottom: 10px;">⚠️ Informasi Model</h3>
+                    <p style="color: #856404; margin-bottom: 8px;"><strong>Status:</strong> ${data.model_info.status}</p>
+                    <p style="color: #856404; margin-bottom: 8px;"><strong>Akurasi Model:</strong> ${data.model_info.accuracy}%</p>
+                    <p style="color: #856404; margin-bottom: 8px;"><strong>Dataset:</strong> ${data.model_info.dataset_size}/${data.model_info.dataset_target} gambar</p>
+                    <p style="color: #856404; font-size: 0.9em; font-style: italic;">${data.model_info.note}</p>
+                </div>
+                ` : ''}
             `;
 
             result.innerHTML = html;
