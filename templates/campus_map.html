@@ -395,48 +395,38 @@
             return `${day}/${month}/${year} ${hour}:${minute}`;
         }
 
-        // Track how many times each location appears
-        const locationCounts = {};
+        // Group detections by location
+        function groupByLocation(data) {
+            const groups = {};
+            data.forEach(item => {
+                if (!groups[item.location]) {
+                    groups[item.location] = [];
+                }
+                groups[item.location].push(item);
+            });
+            return groups;
+        }
         
-        function getLocationPosition(location, index) {
-            // Count occurrences of this location
-            if (!locationCounts[location]) {
-                locationCounts[location] = 0;
-            }
-            const occurrence = locationCounts[location];
-            locationCounts[location]++;
-            
+        function getLocationPosition(location, index, totalLocations) {
             // Use predefined position if available
-            let basePosition;
             if (locationPositions[location]) {
-                basePosition = locationPositions[location];
-            } else {
-                // Otherwise, distribute dynamically in a circle pattern
-                const angle = (index / mapData.length) * 2 * Math.PI;
-                const radius = 35; // percentage
-                const centerX = 50;
-                const centerY = 50;
-                
-                basePosition = {
-                    top: `${centerY + radius * Math.sin(angle)}%`,
-                    left: `${centerX + radius * Math.cos(angle)}%`
-                };
+                return locationPositions[location];
             }
             
-            // Offset multiple detections at same location
-            if (occurrence > 0) {
-                const offsetAngle = (occurrence / 4) * 2 * Math.PI;
-                const offsetRadius = 3 + (occurrence * 2); // Increase offset for each occurrence
-                const topPercent = parseFloat(basePosition.top);
-                const leftPercent = parseFloat(basePosition.left);
-                
-                return {
-                    top: `${topPercent + offsetRadius * Math.sin(offsetAngle)}%`,
-                    left: `${leftPercent + offsetRadius * Math.cos(offsetAngle)}%`
-                };
-            }
+            // Otherwise, distribute dynamically in a grid pattern
+            const cols = Math.ceil(Math.sqrt(totalLocations));
+            const row = Math.floor(index / cols);
+            const col = index % cols;
             
-            return basePosition;
+            const marginX = 15;
+            const marginY = 15;
+            const spacingX = (100 - 2 * marginX) / (cols - 1 || 1);
+            const spacingY = (100 - 2 * marginY) / (Math.ceil(totalLocations / cols) - 1 || 1);
+            
+            return {
+                top: `${marginY + row * spacingY}%`,
+                left: `${marginX + col * spacingX}%`
+            };
         }
 
         function renderCampusMap() {
@@ -450,35 +440,68 @@
                 return;
             }
             
-            console.log('✅ Menampilkan', mapData.length, 'marker di peta (semua deteksi)');
+            console.log('✅ Menampilkan', mapData.length, 'deteksi di peta');
             noDataMsg.style.display = 'none';
 
             // Clear existing markers
             const existingMarkers = map.querySelectorAll('.location-marker');
             existingMarkers.forEach(m => m.remove());
             
-            // Reset location counts
-            Object.keys(locationCounts).forEach(key => delete locationCounts[key]);
+            // Group by location
+            const locationGroups = groupByLocation(mapData);
+            const locations = Object.keys(locationGroups);
+            
+            console.log(`📊 ${locations.length} lokasi unik, ${mapData.length} total deteksi`);
 
-            mapData.forEach((data, index) => {
-                const statusClass = getStatusClass(data.class);
-                const confidence = (data.confidence * 100).toFixed(1);
-                const position = getLocationPosition(data.location, index);
-
-                console.log(`📍 ${data.location} #${locationCounts[data.location]} - ${data.class} di`, position);
-
+            locations.forEach((location, index) => {
+                const detections = locationGroups[location];
+                const position = getLocationPosition(location, index, locations.length);
+                
+                // Get latest detection for display
+                const latest = detections[0];
+                const statusClass = getStatusClass(latest.class);
+                const confidence = (latest.confidence * 100).toFixed(1);
+                
+                // Count by status
+                const statusCount = {};
+                detections.forEach(d => {
+                    statusCount[d.class] = (statusCount[d.class] || 0) + 1;
+                });
+                
                 const marker = document.createElement('div');
                 marker.className = `location-marker ${statusClass}`;
                 marker.style.top = position.top;
                 marker.style.left = position.left;
+                
+                // Show count badge if multiple detections
+                const countBadge = detections.length > 1 ? 
+                    `<div style="
+                        position: absolute;
+                        top: -8px;
+                        right: -8px;
+                        background: #667eea;
+                        color: white;
+                        border-radius: 50%;
+                        width: 24px;
+                        height: 24px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 0.75em;
+                        font-weight: bold;
+                        border: 2px solid white;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    ">${detections.length}</div>` : '';
+                
                 marker.innerHTML = `
+                    ${countBadge}
                     <div class="status-dot ${statusClass}"></div>
-                    <div class="marker-name">${data.location}</div>
-                    <div class="marker-status"><strong>${data.class}</strong> (${confidence}%)</div>
-                    <div class="marker-time">${formatTimestamp(data.timestamp)}</div>
+                    <div class="marker-name">${location}</div>
+                    <div class="marker-status"><strong>${latest.class}</strong> (${confidence}%)</div>
+                    <div class="marker-time">${formatTimestamp(latest.timestamp)}</div>
                 `;
                 
-                marker.onclick = () => showLocationDetail(data);
+                marker.onclick = () => showLocationDetailGroup(location, detections);
                 map.appendChild(marker);
             });
         }
@@ -498,9 +521,12 @@
             document.getElementById('severeCount').textContent = severe;
         }
 
-        function showLocationDetail(data) {
-            const statusClass = getStatusClass(data.class);
-            const confidence = (data.confidence * 100).toFixed(1);
+        function showLocationDetailGroup(location, detections) {
+            const statusColors = {
+                'clean': '#28a745',
+                'light': '#ffc107',
+                'severe': '#dc3545'
+            };
             
             // Create modal
             const modal = document.createElement('div');
@@ -516,21 +542,54 @@
                 justify-content: center;
                 z-index: 1000;
                 animation: fadeIn 0.3s;
+                padding: 20px;
             `;
             
-            const statusColors = {
-                'clean': '#28a745',
-                'light': '#ffc107',
-                'severe': '#dc3545'
-            };
+            // Build detection list HTML
+            let detectionsHTML = '';
+            detections.forEach((data, index) => {
+                const statusClass = getStatusClass(data.class);
+                const confidence = (data.confidence * 100).toFixed(1);
+                
+                detectionsHTML += `
+                    <div style="
+                        background: #f8f9fa;
+                        padding: 15px;
+                        border-radius: 10px;
+                        margin-bottom: 15px;
+                        border-left: 4px solid ${statusColors[statusClass]};
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="
+                                display: inline-block;
+                                background: ${statusColors[statusClass]};
+                                color: white;
+                                padding: 5px 15px;
+                                border-radius: 20px;
+                                font-weight: bold;
+                                font-size: 0.9em;
+                            ">${data.class}</div>
+                            <div style="color: #666; font-size: 0.85em;">${formatTimestamp(data.timestamp)} WIB</div>
+                        </div>
+                        <div style="color: #555; font-size: 0.9em; margin-bottom: 8px;">
+                            <strong>Confidence:</strong> ${confidence}%
+                        </div>
+                        <div style="color: #555; font-size: 0.85em;">
+                            <strong>Tindakan:</strong> ${data.recommendation.action}
+                        </div>
+                    </div>
+                `;
+            });
             
             modal.innerHTML = `
                 <div style="
                     background: white;
                     border-radius: 15px;
                     padding: 30px;
-                    max-width: 500px;
+                    max-width: 600px;
                     width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
                     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
                     animation: slideUp 0.3s;
                 ">
@@ -541,55 +600,28 @@
                         margin-bottom: 20px;
                         padding-bottom: 15px;
                         border-bottom: 2px solid #eee;
+                        position: sticky;
+                        top: 0;
+                        background: white;
+                        z-index: 10;
                     ">
-                        <h2 style="margin: 0; color: #333;">📍 Detail Lokasi</h2>
+                        <div>
+                            <h2 style="margin: 0; color: #333;">📍 ${location}</h2>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">${detections.length} deteksi tercatat</p>
+                        </div>
                         <button onclick="this.closest('div[style*=fixed]').remove()" style="
                             background: none;
                             border: none;
-                            font-size: 24px;
+                            font-size: 28px;
                             cursor: pointer;
                             color: #999;
+                            line-height: 1;
                         ">×</button>
                     </div>
                     
-                    <div style="margin-bottom: 15px;">
-                        <strong style="color: #666;">Lokasi:</strong>
-                        <div style="font-size: 1.1em; color: #333; margin-top: 5px;">${data.location}</div>
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <strong style="color: #666;">Status:</strong>
-                        <div style="
-                            display: inline-block;
-                            background: ${statusColors[statusClass]};
-                            color: white;
-                            padding: 5px 15px;
-                            border-radius: 20px;
-                            margin-top: 5px;
-                            font-weight: bold;
-                        ">${data.class}</div>
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <strong style="color: #666;">Confidence:</strong>
-                        <div style="color: #333; margin-top: 5px;">${confidence}%</div>
-                    </div>
-                    
                     <div style="margin-bottom: 20px;">
-                        <strong style="color: #666;">Terakhir Dicek:</strong>
-                        <div style="color: #333; margin-top: 5px;">${formatTimestamp(data.timestamp)} WIB</div>
-                    </div>
-                    
-                    <div style="
-                        background: #f8f9fa;
-                        padding: 15px;
-                        border-radius: 10px;
-                        border-left: 4px solid ${statusColors[statusClass]};
-                    ">
-                        <strong style="color: #333; display: block; margin-bottom: 10px;">📋 Rekomendasi:</strong>
-                        <p style="margin: 5px 0; color: #555;">${data.recommendation.message}</p>
-                        <p style="margin: 5px 0; color: #555;"><strong>Tindakan:</strong> ${data.recommendation.action}</p>
-                        <p style="margin: 5px 0; color: #555;"><strong>PIC:</strong> ${data.recommendation.pic}</p>
+                        <h3 style="color: #667eea; margin-bottom: 15px; font-size: 1.1em;">📊 Riwayat Deteksi</h3>
+                        ${detectionsHTML}
                     </div>
                     
                     <button onclick="this.closest('div[style*=fixed]').remove()" style="
@@ -601,7 +633,7 @@
                         border-radius: 8px;
                         font-size: 1em;
                         cursor: pointer;
-                        margin-top: 20px;
+                        font-weight: bold;
                     ">Tutup</button>
                 </div>
             `;
