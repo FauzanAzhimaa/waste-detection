@@ -225,20 +225,66 @@ sudo firewall-cmd --reload
 
 ## Langkah 7: Akses dari Mana Saja
 
-### Via Tailscale (Recommended)
+### Opsi A: Via Tailscale (Private - Perlu Join Tailnet)
 ```
 http://100.x.x.x:8080
 ```
 
-### Via Tailscale Hostname (Jika sudah setup)
-```
-http://your-server-name.tailnet-xxxx.ts.net:8080
-```
-
-### Share ke Dosen/Teman
+**Untuk share:**
 1. Mereka harus install Tailscale
 2. Invite mereka ke Tailnet kamu
 3. Mereka bisa akses via IP Tailscale
+
+### Opsi B: Via Tailscale Funnel (Public - Tidak Perlu Tailscale!)
+
+**Setup Tailscale Funnel (Recommended untuk Demo):**
+
+```bash
+# Di server, enable Funnel
+sudo tailscale funnel --bg 8080
+```
+
+Tailscale akan kasih URL public seperti:
+```
+https://your-server.tailnet-name.ts.net
+```
+
+**Keuntungan:**
+- ✅ Gratis
+- ✅ HTTPS otomatis
+- ✅ Orang lain tidak perlu install Tailscale
+- ✅ URL tetap (tidak berubah)
+- ✅ Perfect untuk demo tugas kuliah!
+
+**Cek status Funnel:**
+```bash
+sudo tailscale funnel status
+```
+
+**Stop Funnel:**
+```bash
+sudo tailscale funnel --bg off
+```
+
+### Opsi C: Hybrid Setup (Recommended!) ⭐
+
+**Pakai Tailscale Private + Cloudflare Tunnel:**
+
+- **Tailscale Private** untuk development (private, cepat)
+- **Cloudflare Tunnel** untuk demo/production (public, professional)
+
+**Setup lengkap:** Lihat file `SETUP_CLOUDFLARE_TUNNEL.md`
+
+**Hasil akhir:**
+- Development: `http://100.x.x.x:8080` (via Tailscale)
+- Production: `https://wastedetection.tk` (via Cloudflare)
+
+**Keuntungan:**
+- ✅ Fleksibel (2 cara akses)
+- ✅ Gratis selamanya
+- ✅ Custom domain
+- ✅ HTTPS + DDoS protection
+- ✅ Perfect untuk portfolio!
 
 ---
 
