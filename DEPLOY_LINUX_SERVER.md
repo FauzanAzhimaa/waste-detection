@@ -156,7 +156,7 @@ sudo nano /etc/systemd/system/waste-detection.service
 ### 5.2 Paste Config Ini
 ```ini
 [Unit]
-Description=Waste Detection System - Kampus 1 UNJANI Yogyakarta
+Description=Waste Detection System - Kampus 1 UNJAYA
 After=network.target
 
 [Service]

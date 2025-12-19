@@ -596,5 +596,353 @@
       "confidence_level": "Tinggi",
       "campus": "Kampus 1 UNJANI Yogyakarta"
     }
+  },
+  {
+    "timestamp": "20251219_021136",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_021136_download_1.jpg",
+    "image_url": "/temp/20251219_021136_download_1.jpg",
+    "heatmap_url": null,
+    "heatmap_filename": null,
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.893100380897522,
+      "probabilities": {
+        "Bersih": 0.06360949575901031,
+        "Tumpukan Parah": 0.893100380897522,
+        "Tumpukan Ringan": 0.043290045112371445
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_021946",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_021946_download_1.jpg",
+    "image_url": "/uploads/20251219_021946_download_1.jpg",
+    "heatmap_url": null,
+    "heatmap_filename": null,
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.893100380897522,
+      "probabilities": {
+        "Bersih": 0.06360949575901031,
+        "Tumpukan Parah": 0.893100380897522,
+        "Tumpukan Ringan": 0.043290045112371445
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_022703",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_022703_download_1.jpg",
+    "image_url": "/uploads/20251219_022703_download_1.jpg",
+    "heatmap_url": "/uploads/heatmap_20251219_022703_download_1.jpg",
+    "heatmap_filename": "heatmap_20251219_022703_download_1.jpg",
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.893100380897522,
+      "probabilities": {
+        "Bersih": 0.06360949575901031,
+        "Tumpukan Parah": 0.893100380897522,
+        "Tumpukan Ringan": 0.043290045112371445
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_022951",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_022951_download_1.jpg",
+    "image_url": "/uploads/20251219_022951_download_1.jpg",
+    "heatmap_url": "/uploads/heatmap_20251219_022951_download_1.jpg",
+    "heatmap_filename": "heatmap_20251219_022951_download_1.jpg",
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.893100380897522,
+      "probabilities": {
+        "Bersih": 0.06360949575901031,
+        "Tumpukan Parah": 0.893100380897522,
+        "Tumpukan Ringan": 0.043290045112371445
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_023625",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_023625_download_1.jpg",
+    "image_url": "/uploads/20251219_023625_download_1.jpg",
+    "heatmap_url": "/uploads/heatmap_20251219_023625_download_1.jpg",
+    "heatmap_filename": "heatmap_20251219_023625_download_1.jpg",
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.893100380897522,
+      "probabilities": {
+        "Bersih": 0.06360949575901031,
+        "Tumpukan Parah": 0.893100380897522,
+        "Tumpukan Ringan": 0.043290045112371445
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_023700",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_023700_OIP_18.webp",
+    "image_url": "/uploads/20251219_023700_OIP_18.webp",
+    "heatmap_url": "/uploads/heatmap_20251219_023700_OIP_18.webp",
+    "heatmap_filename": "heatmap_20251219_023700_OIP_18.webp",
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.923478901386261,
+      "probabilities": {
+        "Bersih": 0.015576655976474285,
+        "Tumpukan Parah": 0.923478901386261,
+        "Tumpukan Ringan": 0.06094444543123245
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_024045",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_024045_OIP_18.webp",
+    "image_url": "/uploads/20251219_024045_OIP_18.webp",
+    "heatmap_url": "/uploads/heatmap_20251219_024045_OIP_18.webp",
+    "heatmap_filename": "heatmap_20251219_024045_OIP_18.webp",
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.923478901386261,
+      "probabilities": {
+        "Bersih": 0.015576655976474285,
+        "Tumpukan Parah": 0.923478901386261,
+        "Tumpukan Ringan": 0.06094444543123245
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_024741",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_024741_download_1.jpg",
+    "image_url": "/uploads/20251219_024741_download_1.jpg",
+    "heatmap_url": "/uploads/heatmap_20251219_024741_download_1.jpg",
+    "heatmap_filename": "heatmap_20251219_024741_download_1.jpg",
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.893100380897522,
+      "probabilities": {
+        "Bersih": 0.06360949575901031,
+        "Tumpukan Parah": 0.893100380897522,
+        "Tumpukan Ringan": 0.043290045112371445
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_113831",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_113831_Screenshot_20251217_140843_com.android.chrome.jpg",
+    "image_url": "/uploads/20251219_113831_Screenshot_20251217_140843_com.android.chrome.jpg",
+    "heatmap_url": "/uploads/heatmap_20251219_113831_Screenshot_20251217_140843_com.android.chrome.jpg",
+    "heatmap_filename": "heatmap_20251219_113831_Screenshot_20251217_140843_com.android.chrome.jpg",
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.848908543586731,
+      "probabilities": {
+        "Bersih": 0.060560442507267,
+        "Tumpukan Parah": 0.848908543586731,
+        "Tumpukan Ringan": 0.09053102880716324
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_114412",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_114412_R_988.jpg",
+    "image_url": "/uploads/20251219_114412_R_988.jpg",
+    "heatmap_url": "/uploads/heatmap_20251219_114412_R_988.jpg",
+    "heatmap_filename": "heatmap_20251219_114412_R_988.jpg",
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.9688247442245483,
+      "probabilities": {
+        "Bersih": 0.00943764578551054,
+        "Tumpukan Parah": 0.9688247442245483,
+        "Tumpukan Ringan": 0.02173766680061817
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_132900",
+    "location": "Kantin",
+    "gps": null,
+    "filename": "20251219_132900_OIP_91.webp",
+    "image_url": "/uploads/20251219_132900_OIP_91.webp",
+    "heatmap_url": "/uploads/heatmap_20251219_132900_OIP_91.webp",
+    "heatmap_filename": "heatmap_20251219_132900_OIP_91.webp",
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.9544064998626709,
+      "probabilities": {
+        "Bersih": 0.008904287591576576,
+        "Tumpukan Parah": 0.9544064998626709,
+        "Tumpukan Ringan": 0.03668923303484917
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
+  },
+  {
+    "timestamp": "20251219_134828",
+    "location": "Lokasi tidak diketahui",
+    "gps": null,
+    "filename": "20251219_134828_2025-12-1913.48.136859568548524299223.jpg",
+    "image_url": "/uploads/20251219_134828_2025-12-1913.48.136859568548524299223.jpg",
+    "heatmap_url": "/uploads/heatmap_20251219_134828_2025-12-1913.48.136859568548524299223.jpg",
+    "heatmap_filename": "heatmap_20251219_134828_2025-12-1913.48.136859568548524299223.jpg",
+    "prediction": {
+      "class": "Tumpukan Parah",
+      "confidence": 0.9093563556671143,
+      "probabilities": {
+        "Bersih": 0.008074745535850525,
+        "Tumpukan Parah": 0.9093563556671143,
+        "Tumpukan Ringan": 0.08256884664297104
+      },
+      "class_idx": 1
+    },
+    "recommendation": {
+      "status": "danger",
+      "message": "Tumpukan sampah parah terdeteksi di Kampus 1 UNJANI Yogyakarta!",
+      "action": "Perlu pembersihan segera dan menyeluruh. Laporkan ke Bagian Umum & Fasilitas",
+      "priority": "high",
+      "pic": "Bagian Umum & Fasilitas UNJANI Yogyakarta",
+      "confidence_level": "Tinggi",
+      "campus": "Kampus 1 UNJANI Yogyakarta"
+    },
+    "campus": "Kampus 1 UNJANI Yogyakarta"
   }
 ]
