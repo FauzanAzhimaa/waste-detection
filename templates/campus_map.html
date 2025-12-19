@@ -585,25 +585,23 @@
                 <div style="
                     background: white;
                     border-radius: 15px;
-                    padding: 30px;
                     max-width: 600px;
                     width: 90%;
                     max-height: 80vh;
-                    overflow-y: auto;
                     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
                     animation: slideUp 0.3s;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
                 ">
                     <div style="
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        margin-bottom: 20px;
-                        padding-bottom: 15px;
+                        padding: 25px 30px 20px 30px;
                         border-bottom: 2px solid #eee;
-                        position: sticky;
-                        top: 0;
                         background: white;
-                        z-index: 10;
+                        flex-shrink: 0;
                     ">
                         <div>
                             <h2 style="margin: 0; color: #333;">📍 ${location}</h2>
@@ -616,25 +614,38 @@
                             cursor: pointer;
                             color: #999;
                             line-height: 1;
+                            padding: 0;
+                            margin-left: 15px;
                         ">×</button>
                     </div>
                     
-                    <div style="margin-bottom: 20px;">
+                    <div style="
+                        flex: 1;
+                        overflow-y: auto;
+                        padding: 20px 30px;
+                    ">
                         <h3 style="color: #667eea; margin-bottom: 15px; font-size: 1.1em;">📊 Riwayat Deteksi</h3>
                         ${detectionsHTML}
                     </div>
                     
-                    <button onclick="this.closest('div[style*=fixed]').remove()" style="
-                        width: 100%;
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        color: white;
-                        border: none;
-                        padding: 12px;
-                        border-radius: 8px;
-                        font-size: 1em;
-                        cursor: pointer;
-                        font-weight: bold;
-                    ">Tutup</button>
+                    <div style="
+                        padding: 20px 30px;
+                        background: white;
+                        border-top: 1px solid #eee;
+                        flex-shrink: 0;
+                    ">
+                        <button onclick="this.closest('div[style*=fixed]').remove()" style="
+                            width: 100%;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            border: none;
+                            padding: 12px;
+                            border-radius: 8px;
+                            font-size: 1em;
+                            cursor: pointer;
+                            font-weight: bold;
+                        ">Tutup</button>
+                    </div>
                 </div>
             `;
             
