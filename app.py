@@ -727,7 +727,7 @@ class WasteDetectionApp:
             return self._get_map_data_from_json()
     
     def _get_map_data_from_json(self):
-        """Fallback: Get map data from JSON"""
+        """Fallback: Get map data from JSON - Show ALL detections per location"""
         log_file = Config.LOG_FILE
         
         if not log_file.exists():
@@ -737,7 +737,7 @@ class WasteDetectionApp:
             with open(log_file, 'r', encoding='utf-8') as f:
                 logs = json.load(f)
             
-            # Group by location and get latest detection
+            # Group by location and collect ALL detections
             location_map = {}
             for log in reversed(logs):  # Process from newest
                 location = log.get('location', '').strip()
@@ -746,17 +746,24 @@ class WasteDetectionApp:
                 if not location or location == 'Lokasi tidak diketahui' or location == 'Unknown':
                     continue
                 
+                # Add to location group (keep all detections)
                 if location not in location_map:
-                    location_map[location] = {
-                        'location': location,
-                        'class': log['prediction']['class'],
-                        'confidence': log['prediction']['confidence'],
-                        'timestamp': log['timestamp'],
-                        'recommendation': log['recommendation']
-                    }
+                    location_map[location] = []
+                
+                location_map[location].append({
+                    'location': location,
+                    'class': log['prediction']['class'],
+                    'confidence': log['prediction']['confidence'],
+                    'timestamp': log['timestamp'],
+                    'recommendation': log['recommendation']
+                })
             
-            result = list(location_map.values())
-            print(f"📊 API returning {len(result)} valid locations: {[r['location'] for r in result]}")
+            # Flatten to list (all detections)
+            result = []
+            for location, detections in location_map.items():
+                result.extend(detections)
+            
+            print(f"📊 API returning {len(result)} total detections from {len(location_map)} locations")
             return jsonify(result)
         except Exception as e:
             print(f"Error getting map data: {e}")
