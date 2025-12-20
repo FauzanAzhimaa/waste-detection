@@ -750,10 +750,16 @@ class WasteDetectionApp:
                         yolo_based_class = 'Tumpukan Ringan'
                         yolo_override = f'⚠️ YOLO mendeteksi {object_count} objek sampah berserakan → Tumpukan Ringan (banyak area kotor)'
                 
-                # Override recommendation with YOLO-based classification
+                # Override recommendation AND prediction with YOLO-based classification
                 if yolo_based_class:
+                    # Update prediction result to use YOLO-based class
+                    result['class'] = yolo_based_class
+                    result['yolo_override'] = True
+                    predicted_class = yolo_based_class
+                    confidence = 0.95  # High confidence for YOLO
+                    
                     recommendation = self.model_handler.get_recommendation(yolo_based_class, 0.95)
-                    print(f"🎯 YOLO Override: {predicted_class} → {yolo_based_class} ({object_count} objects, piled={is_piled if object_count > 0 else False})")
+                    print(f"🎯 YOLO Override: {result['class']} → {yolo_based_class} ({object_count} objects, piled={is_piled if object_count > 0 else False})")
             
             # Determine reliability based on overall model accuracy and confidence
             # Since model has 40.54% accuracy and is biased, all predictions are unreliable
