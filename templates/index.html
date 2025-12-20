@@ -972,10 +972,10 @@
                                 ` : ''}
                             </div>
                             
-                            <div class="result-box ${statusClass}" style="margin-top: 20px;">
-                                <div class="result-title">${pred.class}</div>
-                                <div class="result-confidence">Confidence: ${confidence}% (${rec.confidence_level})</div>
-                                ${data.location ? `<div style="margin-top: 10px;">📍 Lokasi: <strong>${data.location}</strong></div>` : ''}
+                            <div style="padding: 25px; border-radius: 10px; margin-top: 20px; border-left: 5px solid ${statusClass === 'success' ? '#28a745' : statusClass === 'warning' ? '#ffc107' : '#dc3545'}; background: ${statusClass === 'success' ? '#d4edda' : statusClass === 'warning' ? '#fff3cd' : '#f8d7da'};">
+                                <div style="font-size: 1.8em; font-weight: bold; margin-bottom: 5px; color: ${statusClass === 'success' ? '#155724' : statusClass === 'warning' ? '#856404' : '#721c24'};">${pred.class}</div>
+                                <div style="font-size: 1.1em; opacity: 0.8; color: ${statusClass === 'success' ? '#155724' : statusClass === 'warning' ? '#856404' : '#721c24'};">Confidence: ${confidence}% (${rec.confidence_level})</div>
+                                ${data.location ? `<div style="margin-top: 10px; color: ${statusClass === 'success' ? '#155724' : statusClass === 'warning' ? '#856404' : '#721c24'};">📍 Lokasi: <strong>${data.location}</strong></div>` : ''}
                             </div>
 
                             <div class="probabilities" style="margin-top: 20px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
