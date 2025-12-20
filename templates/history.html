@@ -267,6 +267,10 @@
                     <h3 id="severeCount">0</h3>
                     <p>Tumpukan Parah</p>
                 </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <h3 id="yoloObjectCount">0</h3>
+                    <p>🎯 Objek YOLO</p>
+                </div>
             </div>
 
             <div class="filters">
@@ -350,11 +354,17 @@
             const clean = allLogs.filter(log => log.prediction.class === 'Bersih').length;
             const light = allLogs.filter(log => log.prediction.class === 'Tumpukan Ringan').length;
             const severe = allLogs.filter(log => log.prediction.class === 'Tumpukan Parah').length;
+            
+            // Count total YOLO objects
+            const totalYoloObjects = allLogs.reduce((sum, log) => {
+                return sum + (log.object_count || 0);
+            }, 0);
 
             document.getElementById('totalDetections').textContent = total;
             document.getElementById('cleanCount').textContent = clean;
             document.getElementById('lightCount').textContent = light;
             document.getElementById('severeCount').textContent = severe;
+            document.getElementById('yoloObjectCount').textContent = totalYoloObjects;
         }
 
         function displayLogs(logs) {
@@ -381,6 +391,7 @@
                     <td>
                         <a href="/uploads/${log.filename}" target="_blank" style="color: #667eea; text-decoration: none;">📷 Lihat</a>
                         ${log.heatmap_filename ? ` | <a href="/uploads/${log.heatmap_filename}" target="_blank" style="color: #667eea; text-decoration: none;">🔥 Heatmap</a>` : ''}
+                        ${log.bbox_filename ? ` | <a href="/uploads/${log.bbox_filename}" target="_blank" style="color: #28a745; text-decoration: none; font-weight: 600;">🎯 YOLO (${log.object_count || 0})</a>` : ''}
                     </td>
                 `;
                 tbody.appendChild(row);
