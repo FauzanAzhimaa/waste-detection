@@ -40,7 +40,7 @@ class Config:
     # YOLO Object Detection Model
     YOLO_MODEL_PATH = BASE_DIR / 'models' / 'waste_yolo_best.pt'
     USE_YOLO = True  # Enable/disable object detection
-    YOLO_CONFIDENCE = 0.15  # Confidence threshold (lower = more detections)
+    YOLO_CONFIDENCE = 0.10  # Confidence threshold (lower = more detections, more sensitive)
     
     # Temporary folder for processing (will be deleted after upload to cloud)
     TEMP_FOLDER = BASE_DIR / 'temp'
@@ -743,6 +743,8 @@ class WasteDetectionApp:
                         # Few scattered objects
                         yolo_based_class = 'Tumpukan Ringan'
                         yolo_override = f'⚠️ YOLO mendeteksi {object_count} objek sampah berserakan → Tumpukan Ringan'
+                        if object_count <= 2:
+                            yolo_override += ' (⚠️ Mungkin ada objek tidak terdeteksi - verifikasi manual)'
                     else:
                         # Many scattered objects (still concerning)
                         yolo_based_class = 'Tumpukan Ringan'
