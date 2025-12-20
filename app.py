@@ -767,35 +767,6 @@ class WasteDetectionApp:
                 import traceback
                 traceback.print_exc()
             
-            # Save detection log (database or JSON)
-            # Prepare YOLO data for JSON (exclude numpy array)
-            yolo_data_for_log = None
-            if yolo_result:
-                yolo_data_for_log = {
-                    'count': yolo_result['count'],
-                    'detections': yolo_result['detections'],
-                    'bbox_image_url': yolo_result.get('bbox_image_url')
-                }
-            
-            log_data = {
-                'timestamp': timestamp_dt,
-                'location': location,
-                'gps': gps_data,
-                'filename': filename,
-                'image_url': image_url or f"/uploads/{filename}",  # Fallback to /uploads route
-                'heatmap_url': heatmap_url or (f"/uploads/{heatmap_filename}" if heatmap_filename else None),
-                'heatmap_filename': heatmap_filename,
-                'prediction': result,
-                'recommendation': recommendation,
-                'campus': Config.CAMPUS_SHORT,
-                # YOLO detection data (without numpy array)
-                'yolo_detection': yolo_data_for_log,
-                'object_count': yolo_result['count'] if yolo_result else 0,
-                'bbox_image_url': yolo_result.get('bbox_image_url') if yolo_result else None,
-                'bbox_filename': bbox_filename,
-            }
-            self._save_detection_log(log_data)
-            
             # Cleanup temp files ONLY if uploaded to cloud
             # Keep files in temp folder for localhost viewing
             if Config.USE_DATABASE and image_url:
@@ -811,6 +782,15 @@ class WasteDetectionApp:
                     print(f"⚠️ Cleanup error: {e}")
             else:
                 print(f"📁 Files kept in temp folder for viewing: {filename}")
+            
+            # Prepare YOLO data for JSON (exclude numpy array)
+            yolo_data_for_log = None
+            if yolo_result:
+                yolo_data_for_log = {
+                    'count': yolo_result['count'],
+                    'detections': yolo_result['detections'],
+                    'bbox_image_url': yolo_result.get('bbox_image_url')
+                }
             
             # Get prediction confidence and determine reliability
             predicted_class = result['class']
@@ -877,6 +857,25 @@ class WasteDetectionApp:
                     
                     recommendation = self.model_handler.get_recommendation(yolo_based_class, 0.95)
                     print(f"🎯 YOLO Override: Classification → {yolo_based_class} ({object_count} objects, piled={is_piled if object_count > 0 else False})")
+            
+            # Save detection log AFTER YOLO override (so recommendation is correct)
+            log_data = {
+                'timestamp': timestamp_dt,
+                'location': location,
+                'gps': gps_data,
+                'filename': filename,
+                'image_url': image_url or f"/uploads/{filename}",
+                'heatmap_url': heatmap_url or (f"/uploads/{heatmap_filename}" if heatmap_filename else None),
+                'heatmap_filename': heatmap_filename,
+                'prediction': result,
+                'recommendation': recommendation,  # This now has correct priority!
+                'campus': Config.CAMPUS_SHORT,
+                'yolo_detection': yolo_data_for_log,
+                'object_count': yolo_result['count'] if yolo_result else 0,
+                'bbox_image_url': yolo_result.get('bbox_image_url') if yolo_result else None,
+                'bbox_filename': bbox_filename,
+            }
+            self._save_detection_log(log_data)
             
             # Prepare response
             response = {
