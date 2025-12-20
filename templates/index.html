@@ -417,13 +417,23 @@
             opacity: 0.8;
         }
 
-        @media (max-width: 968px) {
+        @media (max-width: 1200px) {
+            .heatmap-comparison {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
             .heatmap-comparison {
                 grid-template-columns: 1fr;
             }
             
+            .heatmap-image-container {
+                min-height: 250px;
+            }
+            
             .heatmap-box img {
-                height: 300px;
+                max-height: 350px;
             }
 
             .btn {

@@ -40,7 +40,7 @@ class Config:
     # YOLO Object Detection Model
     YOLO_MODEL_PATH = BASE_DIR / 'models' / 'waste_yolo_best.pt'
     USE_YOLO = True  # Enable/disable object detection
-    YOLO_CONFIDENCE = 0.25  # Confidence threshold for detection
+    YOLO_CONFIDENCE = 0.15  # Confidence threshold (lower = more detections)
     
     # Temporary folder for processing (will be deleted after upload to cloud)
     TEMP_FOLDER = BASE_DIR / 'temp'
@@ -186,8 +186,13 @@ class YOLODetector:
                     'bbox': bbox,  # [x1, y1, x2, y2]
                 })
             
-            # Get image with bounding boxes drawn
-            image_with_boxes = result.plot()  # Returns numpy array
+            # Get image with bounding boxes drawn (without labels)
+            image_with_boxes = result.plot(
+                labels=False,  # Hide class labels
+                conf=False,    # Hide confidence scores
+                line_width=3,  # Thicker boxes
+                font_size=0    # No text
+            )  # Returns numpy array
             
             return {
                 'count': len(detections),
