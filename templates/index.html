@@ -945,29 +945,29 @@
                                 ${index + 1}. ${item.file}
                             </h3>
                             
-                            <div class="heatmap-comparison">
-                                <div class="heatmap-item">
-                                    <div class="heatmap-image">
-                                        <img src="${data.image_url}" alt="Original">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+                                <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.3s;">
+                                    <div style="position: relative; padding-top: 75%; overflow: hidden; background: #f5f5f5;">
+                                        <img src="${data.image_url}" alt="Original" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;">
                                     </div>
-                                    <div class="heatmap-label">📷 Gambar Original</div>
+                                    <div style="background: #667eea; color: white; padding: 10px; text-align: center; font-weight: 500;">📷 Gambar Original</div>
                                 </div>
                                 
                                 ${data.heatmap_url ? `
-                                <div class="heatmap-item">
-                                    <div class="heatmap-image">
-                                        <img src="${data.heatmap_url}" alt="Heatmap">
+                                <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.3s;">
+                                    <div style="position: relative; padding-top: 75%; overflow: hidden; background: #f5f5f5;">
+                                        <img src="${data.heatmap_url}" alt="Heatmap" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;">
                                     </div>
-                                    <div class="heatmap-label">🔥 Density Heatmap (YOLO)</div>
+                                    <div style="background: #ff6b6b; color: white; padding: 10px; text-align: center; font-weight: 500;">🔥 Density Heatmap (YOLO)</div>
                                 </div>
                                 ` : ''}
                                 
                                 ${data.bbox_image_url ? `
-                                <div class="heatmap-item" style="border: 3px solid #28a745;">
-                                    <div class="heatmap-image">
-                                        <img src="${data.bbox_image_url}" alt="YOLO Detection">
+                                <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 3px solid #28a745; transition: transform 0.3s;">
+                                    <div style="position: relative; padding-top: 75%; overflow: hidden; background: #f5f5f5;">
+                                        <img src="${data.bbox_image_url}" alt="YOLO Detection" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;">
                                     </div>
-                                    <div class="heatmap-label" style="background: #28a745;">🎯 YOLO Detection (${data.object_count || 0} objek)</div>
+                                    <div style="background: #28a745; color: white; padding: 10px; text-align: center; font-weight: 500;">🎯 YOLO Detection (${data.object_count || 0} objek)</div>
                                 </div>
                                 ` : ''}
                             </div>
