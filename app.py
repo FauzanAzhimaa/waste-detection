@@ -875,19 +875,6 @@ class WasteDetectionApp:
                     recommendation = self.model_handler.get_recommendation(yolo_based_class, 0.95)
                     print(f"🎯 YOLO Override: Classification → {yolo_based_class} ({object_count} objects, piled={is_piled if object_count > 0 else False})")
             
-            # Determine reliability based on overall model accuracy and confidence
-            # Since model has 40.54% accuracy and is biased, all predictions are unreliable
-            reliability = 'Rendah' if not yolo_override else 'Tinggi'
-            reliability_color = 'danger' if not yolo_override else 'success'
-            
-            # Warning message based on model bias
-            if yolo_override:
-                warning = yolo_override
-            elif predicted_class == 'Tumpukan Parah':
-                warning = f'⚠️ Model cenderung memprediksi semua gambar sebagai "Tumpukan Parah" (bias). Akurasi keseluruhan hanya {Config.MODEL_ACCURACY}%. Prediksi ini mungkin TIDAK AKURAT.'
-            else:
-                warning = f'⚠️ Model jarang memprediksi "{predicted_class}" dengan benar. Akurasi keseluruhan hanya {Config.MODEL_ACCURACY}%. Prediksi ini kemungkinan TIDAK AKURAT.'
-            
             # Prepare response
             response = {
                 'success': True,
@@ -906,22 +893,7 @@ class WasteDetectionApp:
                 # YOLO object detection results (without numpy array)
                 'yolo_detection': yolo_data_for_log,
                 'object_count': yolo_result['count'] if yolo_result else 0,
-                'bbox_image_url': yolo_result.get('bbox_image_url') if yolo_result else None,
-                # Model performance info - honest assessment
-                'model_info': {
-                    'overall_accuracy': Config.MODEL_ACCURACY,
-                    'predicted_class': predicted_class,
-                    'prediction_confidence': round(confidence * 100, 1),
-                    'status': Config.MODEL_STATUS,
-                    'dataset_size': Config.DATASET_SIZE,
-                    'dataset_target': Config.DATASET_TARGET,
-                    'reliability': reliability,
-                    'reliability_color': reliability_color,
-                    'warning': warning,
-                    'yolo_override': yolo_override,
-                    'yolo_based_class': yolo_based_class,
-                    'note': f'Model masih {Config.MODEL_STATUS.lower()} dengan akurasi keseluruhan {Config.MODEL_ACCURACY}% (dataset: {Config.DATASET_SIZE}/{Config.DATASET_TARGET} gambar). {"YOLO digunakan sebagai sumber kebenaran." if yolo_override else "Prediksi mungkin tidak akurat dan perlu verifikasi manual."}'
-                }
+                'bbox_image_url': yolo_result.get('bbox_image_url') if yolo_result else None
             }
             
             return jsonify(response)
