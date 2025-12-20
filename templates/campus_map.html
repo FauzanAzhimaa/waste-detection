@@ -515,7 +515,10 @@
                 else if (data.class === 'Tumpukan Parah') severe++;
             });
 
-            document.getElementById('totalLocations').textContent = mapData.length;
+            // Count unique locations instead of total detections
+            const uniqueLocations = new Set(mapData.map(data => data.location)).size;
+            
+            document.getElementById('totalLocations').textContent = uniqueLocations;
             document.getElementById('cleanCount').textContent = clean;
             document.getElementById('lightCount').textContent = light;
             document.getElementById('severeCount').textContent = severe;

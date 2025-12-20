@@ -939,10 +939,13 @@
                     const statusClass = rec.status;
                     const confidence = (pred.confidence * 100).toFixed(1);
                     
+                    // Truncate long filename for mobile
+                    const displayFileName = item.file.length > 50 ? item.file.substring(0, 47) + '...' : item.file;
+                    
                     html += `
                         <div style="background: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                            <h3 style="color: #667eea; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">
-                                ${index + 1}. ${item.file}
+                            <h3 style="color: #667eea; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px; word-break: break-word; overflow-wrap: break-word;">
+                                ${index + 1}. ${displayFileName}
                             </h3>
                             
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
