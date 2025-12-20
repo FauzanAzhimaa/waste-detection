@@ -37,6 +37,11 @@ class Config:
     BASE_DIR = Path(__file__).parent
     MODEL_PATH = BASE_DIR / 'models' / 'waste_mobilenet.h5'
     
+    # YOLO Object Detection Model
+    YOLO_MODEL_PATH = BASE_DIR / 'models' / 'waste_yolo_best.pt'
+    USE_YOLO = True  # Enable/disable object detection
+    YOLO_CONFIDENCE = 0.25  # Confidence threshold for detection
+    
     # Temporary folder for processing (will be deleted after upload to cloud)
     TEMP_FOLDER = BASE_DIR / 'temp'
     
@@ -128,6 +133,68 @@ class ImageMetadataExtractor:
             return None
         d, m, s = value
         return float(d) + float(m) / 60.0 + float(s) / 3600.0
+
+
+class YOLODetector:
+    """YOLO object detector for waste detection"""
+    
+    def __init__(self, model_path, confidence=0.25):
+        self.model_path = model_path
+        self.confidence = confidence
+        self.model = None
+        self._load_model()
+    
+    def _load_model(self):
+        """Load YOLO model"""
+        if not self.model_path.exists():
+            print(f"⚠️ YOLO model not found: {self.model_path}")
+            print(f"   Object detection will be disabled")
+            return
+        
+        try:
+            from ultralytics import YOLO
+            self.model = YOLO(str(self.model_path))
+            print(f"✓ YOLO model loaded: {self.model_path.name}")
+        except Exception as e:
+            print(f"❌ Error loading YOLO: {e}")
+            self.model = None
+    
+    def detect(self, image_path):
+        """Detect objects in image and return results with bounding boxes"""
+        if not self.model:
+            return None
+        
+        try:
+            # Run detection
+            results = self.model(str(image_path), conf=self.confidence, verbose=False)
+            
+            if not results or len(results) == 0:
+                return None
+            
+            result = results[0]
+            
+            # Extract detections
+            detections = []
+            for box in result.boxes:
+                detections.append({
+                    'class': result.names[int(box.cls)],
+                    'confidence': float(box.conf),
+                    'bbox': box.xyxy[0].tolist(),  # [x1, y1, x2, y2]
+                })
+            
+            # Get image with bounding boxes drawn
+            image_with_boxes = result.plot()  # Returns numpy array
+            
+            return {
+                'count': len(detections),
+                'detections': detections,
+                'image_with_boxes': image_with_boxes
+            }
+        except Exception as e:
+            print(f"❌ YOLO detection error: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
 
 
 class WasteDetectionModel:
@@ -397,12 +464,28 @@ class WasteDetectionApp:
         self.app.config.from_object(Config)
         Config.init_folders()
         
-        # Initialize model
+        # Initialize classification model
         self.model_handler = WasteDetectionModel(
             Config.MODEL_PATH,
             Config.CLASS_NAMES,
             Config.IMAGE_SIZE
         )
+        
+        # Initialize YOLO detector (object detection)
+        self.yolo_detector = None
+        if Config.USE_YOLO:
+            try:
+                self.yolo_detector = YOLODetector(
+                    Config.YOLO_MODEL_PATH,
+                    Config.YOLO_CONFIDENCE
+                )
+                if self.yolo_detector.model:
+                    print("✓ YOLO object detection enabled")
+                else:
+                    print("⚠️ YOLO disabled (model not found)")
+            except Exception as e:
+                print(f"⚠️ YOLO initialization failed: {e}")
+                self.yolo_detector = None
         
         # Initialize database and cloudinary if available
         self.db = None
@@ -537,6 +620,49 @@ class WasteDetectionApp:
                 import traceback
                 traceback.print_exc()
             
+            # YOLO Object Detection
+            yolo_result = None
+            bbox_filename = None
+            bbox_url = None
+            temp_bbox_path = None
+            
+            if self.yolo_detector and self.yolo_detector.model:
+                try:
+                    print(f"🎯 Running YOLO object detection...")
+                    yolo_result = self.yolo_detector.detect(temp_filepath)
+                    
+                    if yolo_result and yolo_result['count'] > 0:
+                        print(f"✓ YOLO detected {yolo_result['count']} objects")
+                        
+                        # Save image with bounding boxes
+                        bbox_filename = f"bbox_{filename}"
+                        temp_bbox_path = Config.TEMP_FOLDER / bbox_filename
+                        Image.fromarray(yolo_result['image_with_boxes']).save(str(temp_bbox_path))
+                        print(f"✓ Bounding boxes saved: {bbox_filename}")
+                        
+                        # Upload bbox image to Cloudinary (if available)
+                        if Config.USE_DATABASE and self.cloudinary and cloudinary_public_id:
+                            try:
+                                print(f"☁️ Uploading bbox image to Cloudinary...")
+                                bbox_result = self.cloudinary.upload_image(
+                                    str(temp_bbox_path),
+                                    folder='waste-detection',
+                                    public_id=f"{cloudinary_public_id}_bbox"
+                                )
+                                bbox_url = bbox_result['url']
+                                print(f"✓ Bbox image uploaded: {bbox_url}")
+                            except Exception as e:
+                                print(f"⚠️ Bbox upload failed: {e}")
+                        
+                        # Set bbox URL (cloud or local)
+                        yolo_result['bbox_image_url'] = bbox_url or f"/uploads/{bbox_filename}"
+                    else:
+                        print("⚠️ No objects detected by YOLO")
+                except Exception as e:
+                    print(f"❌ YOLO detection failed: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
             # Save detection log (database or JSON)
             log_data = {
                 'timestamp': timestamp_dt,
@@ -548,7 +674,12 @@ class WasteDetectionApp:
                 'heatmap_filename': heatmap_filename,
                 'prediction': result,
                 'recommendation': recommendation,
-                'campus': Config.CAMPUS_SHORT
+                'campus': Config.CAMPUS_SHORT,
+                # YOLO detection data
+                'yolo_detection': yolo_result,
+                'object_count': yolo_result['count'] if yolo_result else 0,
+                'bbox_image_url': yolo_result.get('bbox_image_url') if yolo_result else None,
+                'bbox_filename': bbox_filename,
             }
             self._save_detection_log(log_data)
             
@@ -560,6 +691,8 @@ class WasteDetectionApp:
                         temp_filepath.unlink()
                     if temp_heatmap_path and temp_heatmap_path.exists():
                         temp_heatmap_path.unlink()
+                    if temp_bbox_path and temp_bbox_path.exists():
+                        temp_bbox_path.unlink()
                     print("✓ Temp files cleaned up (uploaded to cloud)")
                 except Exception as e:
                     print(f"⚠️ Cleanup error: {e}")
@@ -596,6 +729,10 @@ class WasteDetectionApp:
                 'timestamp': timestamp,
                 'campus': Config.CAMPUS_SHORT,
                 'using_database': Config.USE_DATABASE,
+                # YOLO object detection results
+                'yolo_detection': yolo_result,
+                'object_count': yolo_result['count'] if yolo_result else 0,
+                'bbox_image_url': yolo_result.get('bbox_image_url') if yolo_result else None,
                 # Model performance info - honest assessment
                 'model_info': {
                     'overall_accuracy': Config.MODEL_ACCURACY,
@@ -757,7 +894,9 @@ class WasteDetectionApp:
                     'timestamp': log['timestamp'],
                     'recommendation': log['recommendation'],
                     'image_url': log.get('image_url', ''),
-                    'heatmap_url': log.get('heatmap_url', '')
+                    'heatmap_url': log.get('heatmap_url', ''),
+                    'bbox_image_url': log.get('bbox_image_url', ''),
+                    'object_count': log.get('object_count', 0),
                 })
             
             # Flatten to list (all detections)
