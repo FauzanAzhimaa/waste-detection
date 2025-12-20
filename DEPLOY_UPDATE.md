@@ -1,5 +1,32 @@
 # Deploy Update ke Server Production
 
+## ⚠️ IMPORTANT: Clear Old Data
+
+**Data lama masih menggunakan Grad-CAM heatmap!**
+
+Sebelum atau setelah deploy, hapus data lama:
+
+```bash
+# SSH ke server
+ssh user@your-server-ip
+
+# Navigate ke project
+cd /path/to/waste-detection
+
+# Backup old data (optional)
+cp detection_logs.json detection_logs_backup_$(date +%Y%m%d).json
+
+# Delete old data
+rm detection_logs.json
+
+# Restart service
+sudo systemctl restart waste-detection
+```
+
+**Catatan:** Ini akan menghapus semua history deteksi lama. Jika ingin keep history, skip langkah ini (tapi data lama akan tetap tampil dengan Grad-CAM).
+
+---
+
 ## Perubahan yang Sudah Di-push
 
 ✅ **Commit terakhir:** `0d2b2d4`
@@ -34,16 +61,20 @@ ssh user@100.x.x.x
 # 2. Navigate ke project directory
 cd /path/to/waste-detection
 
-# 3. Pull latest changes
+# 3. Backup & delete old data (IMPORTANT!)
+cp detection_logs.json detection_logs_backup_$(date +%Y%m%d).json
+rm detection_logs.json
+
+# 4. Pull latest changes
 git pull origin main
 
-# 4. Restart service
+# 5. Restart service
 sudo systemctl restart waste-detection
 
-# 5. Check status
+# 6. Check status
 sudo systemctl status waste-detection
 
-# 6. Check logs (optional)
+# 7. Check logs (optional)
 sudo journalctl -u waste-detection -f
 ```
 
@@ -60,6 +91,14 @@ cd /path/to/waste-detection
 # Backup current state
 echo "📦 Creating backup..."
 git stash
+
+# Backup and clear old data
+echo "🗑️ Clearing old data (Grad-CAM)..."
+if [ -f "detection_logs.json" ]; then
+    cp detection_logs.json detection_logs_backup_$(date +%Y%m%d).json
+    rm detection_logs.json
+    echo "✅ Old data cleared and backed up"
+fi
 
 # Pull latest
 echo "⬇️ Pulling latest changes..."
@@ -80,6 +119,7 @@ if [ $? -eq 0 ]; then
     if systemctl is-active --quiet waste-detection; then
         echo "✅ Service running successfully!"
         echo "🌐 Access: https://waste-detection.online"
+        echo "📊 Old data cleared - history will be empty"
     else
         echo "❌ Service failed to start!"
         echo "📋 Check logs: sudo journalctl -u waste-detection -n 50"
