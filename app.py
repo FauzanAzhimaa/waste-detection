@@ -289,9 +289,102 @@ class WasteDetectionModel:
             'class_idx': class_idx
         }
     
-    def generate_gradcam(self, image_path, pred_index=None):
-        """Generate Grad-CAM heatmap - memory efficient version"""
+    def generate_yolo_density_heatmap(self, image_path, detections):
+        """
+        Generate density heatmap from YOLO detections
+        Shows spatial distribution and clustering of detected waste objects
+        
+        Args:
+            image_path: Path to original image
+            detections: List of YOLO detections with bbox coordinates
+        
+        Returns:
+            overlay: RGB image with heatmap overlay
+        """
         try:
+            print(f"🔥 Generating YOLO density heatmap...")
+            
+            # Load original image
+            img_pil = Image.open(image_path).convert('RGB')
+            original_size = img_pil.size
+            img_array = np.array(img_pil)
+            
+            # Create empty heatmap
+            heatmap = np.zeros((img_array.shape[0], img_array.shape[1]), dtype=np.float32)
+            
+            if not detections or len(detections) == 0:
+                print("ℹ️ No detections - returning blue (clean) heatmap")
+                # Return blue heatmap for clean area
+                heatmap_colored = np.zeros_like(img_array)
+                heatmap_colored[:, :, 2] = 255  # Blue channel
+                overlay = (heatmap_colored * 0.3 + img_array * 0.7).astype(np.uint8)
+                return overlay
+            
+            print(f"📍 Creating density map from {len(detections)} objects...")
+            
+            # Add heat for each detection
+            for det in detections:
+                bbox = det['bbox']  # [x1, y1, x2, y2]
+                x1, y1, x2, y2 = map(int, bbox)
+                
+                # Ensure coordinates are within image bounds
+                x1 = max(0, min(x1, img_array.shape[1] - 1))
+                x2 = max(0, min(x2, img_array.shape[1] - 1))
+                y1 = max(0, min(y1, img_array.shape[0] - 1))
+                y2 = max(0, min(y2, img_array.shape[0] - 1))
+                
+                # Add heat to bbox area (higher in center)
+                width = x2 - x1
+                height = y2 - y1
+                
+                if width > 0 and height > 0:
+                    # Create gaussian-like distribution for smoother heatmap
+                    y_coords, x_coords = np.ogrid[0:height, 0:width]
+                    center_y, center_x = height / 2, width / 2
+                    
+                    # Distance from center (normalized)
+                    dist = np.sqrt(((x_coords - center_x) / (width / 2)) ** 2 + 
+                                   ((y_coords - center_y) / (height / 2)) ** 2)
+                    
+                    # Gaussian-like weight (higher in center, lower at edges)
+                    weight = np.exp(-dist ** 2 / 0.5)
+                    
+                    # Add weighted heat to heatmap
+                    heatmap[y1:y2, x1:x2] += weight
+            
+            # Apply Gaussian blur for smooth transitions
+            kernel_size = max(31, int(min(img_array.shape[:2]) * 0.05))  # 5% of image size
+            if kernel_size % 2 == 0:
+                kernel_size += 1  # Must be odd
+            heatmap = cv2.GaussianBlur(heatmap, (kernel_size, kernel_size), 0)
+            
+            # Normalize heatmap
+            if heatmap.max() > 0:
+                heatmap = heatmap / heatmap.max()
+            
+            # Apply colormap (JET: blue=low, red=high)
+            heatmap_colored = cv2.applyColorMap(np.uint8(255 * heatmap), cv2.COLORMAP_JET)
+            heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
+            
+            # Create overlay (70% heatmap, 30% original)
+            overlay = (heatmap_colored * 0.7 + img_array * 0.3).astype(np.uint8)
+            
+            print(f"✓ YOLO density heatmap generated (max density: {heatmap.max():.2f})")
+            return overlay
+            
+        except Exception as e:
+            print(f"❌ YOLO heatmap error: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+    
+    def generate_gradcam(self, image_path, pred_index=None):
+        """
+        DEPRECATED: Grad-CAM heatmap (replaced by YOLO density heatmap)
+        Kept for backward compatibility but not used
+        """
+        try:
+            print(f"⚠️ Grad-CAM is deprecated - using YOLO density heatmap instead")
             print(f"🔥 Starting Grad-CAM generation...")
             print(f"📊 Model layers: {len(self.model.layers)} total")
             
@@ -596,44 +689,12 @@ class WasteDetectionApp:
                 except Exception as e:
                     print(f"⚠️ Cloudinary upload failed: {e}")
             
-            # Generate heatmap
-            heatmap_filename = None
-            heatmap_error = None
-            try:
-                print(f"🔥 Generating heatmap for {filename}...")
-                overlay = self.model_handler.generate_gradcam(temp_filepath, result['class_idx'])
-                if overlay is not None:
-                    heatmap_filename = f"heatmap_{filename}"
-                    temp_heatmap_path = Config.TEMP_FOLDER / heatmap_filename
-                    Image.fromarray(overlay).save(str(temp_heatmap_path))
-                    print(f"✓ Heatmap generated: {heatmap_filename}")
-                    
-                    # Upload heatmap to Cloudinary (if available)
-                    if Config.USE_DATABASE and self.cloudinary and cloudinary_public_id:
-                        try:
-                            print(f"☁️ Uploading heatmap to Cloudinary...")
-                            heatmap_result = self.cloudinary.upload_heatmap(
-                                str(temp_heatmap_path),
-                                cloudinary_public_id
-                            )
-                            heatmap_url = heatmap_result['url']
-                            print(f"✓ Heatmap uploaded: {heatmap_url}")
-                        except Exception as e:
-                            print(f"⚠️ Heatmap upload failed: {e}")
-                else:
-                    heatmap_error = "Heatmap generation returned None"
-                    print(f"❌ {heatmap_error}")
-            except Exception as e:
-                heatmap_error = str(e)
-                print(f"❌ Heatmap generation failed: {e}")
-                import traceback
-                traceback.print_exc()
-            
-            # YOLO Object Detection
+            # YOLO Object Detection (run FIRST to get detections for heatmap)
             yolo_result = None
             bbox_filename = None
             bbox_url = None
             temp_bbox_path = None
+            yolo_detections = []  # For heatmap generation
             
             if self.yolo_detector and self.yolo_detector.model:
                 try:
@@ -642,6 +703,7 @@ class WasteDetectionApp:
                     
                     if yolo_result and yolo_result['count'] > 0:
                         print(f"✓ YOLO detected {yolo_result['count']} objects")
+                        yolo_detections = yolo_result['detections']  # Save for heatmap
                         
                         # Save image with bounding boxes
                         bbox_filename = f"bbox_{filename}"
@@ -666,11 +728,44 @@ class WasteDetectionApp:
                         # Set bbox URL (cloud or local)
                         yolo_result['bbox_image_url'] = bbox_url or f"/uploads/{bbox_filename}"
                     else:
-                        print("⚠️ No objects detected by YOLO")
+                        print("ℹ️ No objects detected by YOLO (clean area)")
                 except Exception as e:
                     print(f"❌ YOLO detection failed: {e}")
                     import traceback
                     traceback.print_exc()
+            
+            # Generate YOLO-based density heatmap (using YOLO detections)
+            heatmap_filename = None
+            heatmap_error = None
+            try:
+                print(f"🔥 Generating YOLO density heatmap for {filename}...")
+                overlay = self.model_handler.generate_yolo_density_heatmap(temp_filepath, yolo_detections)
+                if overlay is not None:
+                    heatmap_filename = f"heatmap_{filename}"
+                    temp_heatmap_path = Config.TEMP_FOLDER / heatmap_filename
+                    Image.fromarray(overlay).save(str(temp_heatmap_path))
+                    print(f"✓ YOLO density heatmap generated: {heatmap_filename}")
+                    
+                    # Upload heatmap to Cloudinary (if available)
+                    if Config.USE_DATABASE and self.cloudinary and cloudinary_public_id:
+                        try:
+                            print(f"☁️ Uploading heatmap to Cloudinary...")
+                            heatmap_result = self.cloudinary.upload_heatmap(
+                                str(temp_heatmap_path),
+                                cloudinary_public_id
+                            )
+                            heatmap_url = heatmap_result['url']
+                            print(f"✓ Heatmap uploaded: {heatmap_url}")
+                        except Exception as e:
+                            print(f"⚠️ Heatmap upload failed: {e}")
+                else:
+                    heatmap_error = "Heatmap generation returned None"
+                    print(f"❌ {heatmap_error}")
+            except Exception as e:
+                heatmap_error = str(e)
+                print(f"❌ Heatmap generation failed: {e}")
+                import traceback
+                traceback.print_exc()
             
             # Save detection log (database or JSON)
             # Prepare YOLO data for JSON (exclude numpy array)

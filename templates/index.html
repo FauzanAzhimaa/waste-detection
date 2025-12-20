@@ -554,11 +554,14 @@
                     ">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                             <span style="font-size: 1.8em;">ℹ️</span>
-                            <h3 style="margin: 0; color: #1976d2; font-size: 1.2em;">Perbandingan Metode Deteksi</h3>
+                            <h3 style="margin: 0; color: #1976d2; font-size: 1.2em;">Visualisasi Deteksi Sampah</h3>
                         </div>
                         <div style="color: #555; line-height: 1.7; font-size: 0.95em;">
-                            <p style="margin: 8px 0;"><strong>🔥 Heatmap AI Focus:</strong> Visualisasi area fokus model classification (akurasi 40%, kurang akurat)</p>
-                            <p style="margin: 8px 0;"><strong>🎯 Object Detection YOLO:</strong> Deteksi lokasi spesifik sampah dengan bounding box (lebih akurat, direkomendasikan)</p>
+                            <p style="margin: 8px 0;"><strong>🔥 Density Heatmap:</strong> Peta kepadatan sampah berdasarkan deteksi YOLO (biru=bersih, merah=padat)</p>
+                            <p style="margin: 8px 0;"><strong>🎯 Object Detection:</strong> Lokasi spesifik setiap objek sampah dengan bounding box (CNN YOLOv8)</p>
+                            <p style="margin: 6px 0; padding: 8px; background: #e3f2fd; border-radius: 6px; font-size: 0.9em;">
+                                💡 <em>Kedua visualisasi menggunakan hasil deteksi YOLO yang sama - konsisten dan akurat!</em>
+                            </p>
                         </div>
                     </div>
                     
@@ -720,7 +723,7 @@
                         <div class="heatmap-image-container">
                             <img src="${heatmapUrl}" alt="Heatmap" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>Heatmap tidak tersedia</text></svg>';">
                         </div>
-                        <div class="heatmap-label">🔥 Heatmap AI Focus</div>
+                        <div class="heatmap-label">🔥 Density Heatmap (YOLO)</div>
                     </div>
                 `;
             }
