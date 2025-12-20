@@ -721,13 +721,35 @@ class WasteDetectionApp:
             predicted_class = result['class']
             confidence = result['confidence']
             
+            # YOLO-BASED OVERRIDE: Use YOLO detection as source of truth
+            yolo_override = None
+            yolo_based_class = None
+            if yolo_result and yolo_result['count'] is not None:
+                object_count = yolo_result['count']
+                if object_count == 0:
+                    yolo_based_class = 'Bersih'
+                    yolo_override = f'✅ YOLO mendeteksi 0 objek sampah → Area Bersih'
+                elif object_count <= 3:
+                    yolo_based_class = 'Tumpukan Ringan'
+                    yolo_override = f'⚠️ YOLO mendeteksi {object_count} objek sampah → Tumpukan Ringan'
+                else:
+                    yolo_based_class = 'Tumpukan Parah'
+                    yolo_override = f'🚨 YOLO mendeteksi {object_count} objek sampah → Tumpukan Parah'
+                
+                # Override recommendation with YOLO-based classification
+                if yolo_based_class:
+                    recommendation = self.model_handler.get_recommendation(yolo_based_class, 0.95)
+                    print(f"🎯 YOLO Override: {predicted_class} → {yolo_based_class} ({object_count} objects)")
+            
             # Determine reliability based on overall model accuracy and confidence
             # Since model has 40.54% accuracy and is biased, all predictions are unreliable
-            reliability = 'Rendah'
-            reliability_color = 'danger'
+            reliability = 'Rendah' if not yolo_override else 'Tinggi'
+            reliability_color = 'danger' if not yolo_override else 'success'
             
             # Warning message based on model bias
-            if predicted_class == 'Tumpukan Parah':
+            if yolo_override:
+                warning = yolo_override
+            elif predicted_class == 'Tumpukan Parah':
                 warning = f'⚠️ Model cenderung memprediksi semua gambar sebagai "Tumpukan Parah" (bias). Akurasi keseluruhan hanya {Config.MODEL_ACCURACY}%. Prediksi ini mungkin TIDAK AKURAT.'
             else:
                 warning = f'⚠️ Model jarang memprediksi "{predicted_class}" dengan benar. Akurasi keseluruhan hanya {Config.MODEL_ACCURACY}%. Prediksi ini kemungkinan TIDAK AKURAT.'
@@ -762,7 +784,9 @@ class WasteDetectionApp:
                     'reliability': reliability,
                     'reliability_color': reliability_color,
                     'warning': warning,
-                    'note': f'Model masih {Config.MODEL_STATUS.lower()} dengan akurasi keseluruhan {Config.MODEL_ACCURACY}% (dataset: {Config.DATASET_SIZE}/{Config.DATASET_TARGET} gambar). Prediksi mungkin tidak akurat dan perlu verifikasi manual.'
+                    'yolo_override': yolo_override,
+                    'yolo_based_class': yolo_based_class,
+                    'note': f'Model masih {Config.MODEL_STATUS.lower()} dengan akurasi keseluruhan {Config.MODEL_ACCURACY}% (dataset: {Config.DATASET_SIZE}/{Config.DATASET_TARGET} gambar). {"YOLO digunakan sebagai sumber kebenaran." if yolo_override else "Prediksi mungkin tidak akurat dan perlu verifikasi manual."}'
                 }
             }
             
