@@ -735,31 +735,50 @@ class WasteDetectionApp:
                     detections = yolo_data_for_log.get('detections', []) if yolo_data_for_log else []
                     is_piled = self._analyze_pile_clustering(detections)
                     
+                    # Improved classification logic:
+                    # 1. If piled (high density/close proximity) → PARAH regardless of count
+                    # 2. If many objects (>8) even if scattered → PARAH (too much waste)
+                    # 3. If moderate (3-8 scattered) → RINGAN
+                    # 4. If few (1-2 scattered) → RINGAN with warning
+                    
                     if is_piled:
-                        # Objects are close together (piled up)
+                        # Objects are close together (piled up) → always severe
                         yolo_based_class = 'Tumpukan Parah'
-                        yolo_override = f'🚨 YOLO mendeteksi {object_count} objek sampah MENUMPUK → Tumpukan Parah'
-                    elif object_count <= 5:
-                        # Few scattered objects
+                        yolo_override = f'🚨 YOLO: {object_count} objek MENUMPUK (kepadatan tinggi) → Tumpukan Parah'
+                    elif object_count > 8:
+                        # Too many objects even if scattered → severe
+                        yolo_based_class = 'Tumpukan Parah'
+                        yolo_override = f'🚨 YOLO: {object_count} objek sampah (terlalu banyak) → Tumpukan Parah'
+                    elif object_count >= 3:
+                        # Moderate scattered objects → light
                         yolo_based_class = 'Tumpukan Ringan'
-                        yolo_override = f'⚠️ YOLO mendeteksi {object_count} objek sampah berserakan → Tumpukan Ringan'
-                        if object_count <= 2:
-                            yolo_override += ' (⚠️ Mungkin ada objek tidak terdeteksi - verifikasi manual)'
+                        yolo_override = f'⚠️ YOLO: {object_count} objek sampah berserakan → Tumpukan Ringan'
                     else:
-                        # Many scattered objects (still concerning)
+                        # Few scattered objects (1-2) → light with warning
                         yolo_based_class = 'Tumpukan Ringan'
-                        yolo_override = f'⚠️ YOLO mendeteksi {object_count} objek sampah berserakan → Tumpukan Ringan (banyak area kotor)'
+                        yolo_override = f'⚠️ YOLO: {object_count} objek sampah → Tumpukan Ringan'
+                        if object_count <= 2:
+                            yolo_override += ' (⚠️ Mungkin ada objek kecil tidak terdeteksi)'
                 
                 # Override recommendation AND prediction with YOLO-based classification
                 if yolo_based_class:
                     # Update prediction result to use YOLO-based class
                     result['class'] = yolo_based_class
+                    result['confidence'] = 0.95  # High confidence for YOLO
                     result['yolo_override'] = True
+                    
+                    # Update probabilities to reflect YOLO-based classification
+                    result['probabilities'] = {
+                        'Bersih': 0.95 if yolo_based_class == 'Bersih' else 0.02,
+                        'Tumpukan Ringan': 0.95 if yolo_based_class == 'Tumpukan Ringan' else 0.02,
+                        'Tumpukan Parah': 0.95 if yolo_based_class == 'Tumpukan Parah' else 0.01
+                    }
+                    
                     predicted_class = yolo_based_class
                     confidence = 0.95  # High confidence for YOLO
                     
                     recommendation = self.model_handler.get_recommendation(yolo_based_class, 0.95)
-                    print(f"🎯 YOLO Override: {result['class']} → {yolo_based_class} ({object_count} objects, piled={is_piled if object_count > 0 else False})")
+                    print(f"🎯 YOLO Override: Classification → {yolo_based_class} ({object_count} objects, piled={is_piled if object_count > 0 else False})")
             
             # Determine reliability based on overall model accuracy and confidence
             # Since model has 40.54% accuracy and is biased, all predictions are unreliable
@@ -827,48 +846,74 @@ class WasteDetectionApp:
         """
         Analyze if detected objects are piled up (close together) or scattered
         Returns True if objects are piled up, False if scattered
+        
+        Improved logic:
+        - Consider object count (more objects = potentially more severe)
+        - Consider density (objects in small area = piled)
+        - Consider overlap and proximity
         """
-        if not detections or len(detections) < 2:
+        if not detections:
             return False
         
-        # Calculate center points of all bounding boxes
+        object_count = len(detections)
+        
+        # Single object is never "piled"
+        if object_count == 1:
+            return False
+        
+        # Calculate center points and bbox sizes
         centers = []
+        total_area = 0
         for det in detections:
             bbox = det['bbox']  # [x1, y1, x2, y2]
             center_x = (bbox[0] + bbox[2]) / 2
             center_y = (bbox[1] + bbox[3]) / 2
             centers.append((center_x, center_y))
-        
-        # Calculate average distance between all pairs
-        total_distance = 0
-        pair_count = 0
-        for i in range(len(centers)):
-            for j in range(i + 1, len(centers)):
-                x1, y1 = centers[i]
-                x2, y2 = centers[j]
-                distance = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
-                total_distance += distance
-                pair_count += 1
-        
-        avg_distance = total_distance / pair_count if pair_count > 0 else 0
-        
-        # Calculate average bbox size to normalize distance
-        avg_bbox_size = 0
-        for det in detections:
-            bbox = det['bbox']
+            
             width = bbox[2] - bbox[0]
             height = bbox[3] - bbox[1]
-            avg_bbox_size += (width + height) / 2
-        avg_bbox_size /= len(detections)
+            total_area += width * height
         
-        # Normalize distance by bbox size
-        normalized_distance = avg_distance / avg_bbox_size if avg_bbox_size > 0 else avg_distance
+        # Calculate bounding box that contains all objects
+        all_x = [c[0] for c in centers]
+        all_y = [c[1] for c in centers]
+        spread_x = max(all_x) - min(all_x)
+        spread_y = max(all_y) - min(all_y)
+        spread_area = spread_x * spread_y if spread_x > 0 and spread_y > 0 else 1
         
-        # Threshold: if normalized distance < 3, objects are piled up
-        # (objects are within 3x their size from each other)
-        is_piled = normalized_distance < 3.0
+        # Calculate density: total object area / spread area
+        density = total_area / spread_area if spread_area > 0 else 0
         
-        print(f"📏 Clustering analysis: avg_distance={avg_distance:.1f}, normalized={normalized_distance:.2f}, piled={is_piled}")
+        # Calculate average distance between nearest neighbors
+        min_distances = []
+        for i in range(len(centers)):
+            min_dist = float('inf')
+            for j in range(len(centers)):
+                if i != j:
+                    x1, y1 = centers[i]
+                    x2, y2 = centers[j]
+                    distance = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+                    min_dist = min(min_dist, distance)
+            if min_dist != float('inf'):
+                min_distances.append(min_dist)
+        
+        avg_min_distance = sum(min_distances) / len(min_distances) if min_distances else 0
+        
+        # Calculate average bbox size for normalization
+        avg_bbox_size = (total_area / object_count) ** 0.5  # sqrt of average area
+        normalized_distance = avg_min_distance / avg_bbox_size if avg_bbox_size > 0 else avg_min_distance
+        
+        # Decision logic:
+        # 1. High density (>0.3) = objects occupy significant portion of spread area = PILED
+        # 2. Close proximity (normalized distance < 2.5) = objects very close = PILED
+        # 3. Many objects (>10) with moderate density (>0.15) = PILED
+        is_piled = (
+            density > 0.3 or  # High density
+            normalized_distance < 2.5 or  # Very close objects
+            (object_count > 10 and density > 0.15)  # Many objects with moderate density
+        )
+        
+        print(f"📏 Clustering: count={object_count}, density={density:.3f}, norm_dist={normalized_distance:.2f} → {'PILED' if is_piled else 'SCATTERED'}")
         return is_piled
     
     def _save_detection_log(self, log_data):
