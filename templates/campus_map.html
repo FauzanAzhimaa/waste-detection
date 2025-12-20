@@ -398,13 +398,32 @@
         // Group detections by location
         function groupByLocation(data) {
             const groups = {};
+            const locationMap = {}; // Map normalized -> original name
+            
             data.forEach(item => {
-                if (!groups[item.location]) {
-                    groups[item.location] = [];
+                // Normalize location (lowercase, trim whitespace)
+                const normalizedLocation = item.location.toLowerCase().trim();
+                
+                // Store original location name (use first occurrence)
+                if (!locationMap[normalizedLocation]) {
+                    locationMap[normalizedLocation] = item.location;
                 }
-                groups[item.location].push(item);
+                
+                // Group by normalized location
+                if (!groups[normalizedLocation]) {
+                    groups[normalizedLocation] = [];
+                }
+                groups[normalizedLocation].push(item);
             });
-            return groups;
+            
+            // Return groups with original location names as keys
+            const result = {};
+            Object.keys(groups).forEach(normalized => {
+                const originalName = locationMap[normalized];
+                result[originalName] = groups[normalized];
+            });
+            
+            return result;
         }
         
         function getLocationPosition(location, index, totalLocations) {
