@@ -941,7 +941,7 @@
                     
                     html += `
                         <div style="background: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                            <h3 style="color: #667eea; margin-bottom: 15px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">
                                 ${index + 1}. ${item.file}
                             </h3>
                             
@@ -974,11 +974,42 @@
                             
                             <div class="result-box ${statusClass}" style="margin-top: 20px;">
                                 <div class="result-title">${pred.class}</div>
-                                <div class="result-confidence">Confidence: ${confidence}%</div>
-                                <div style="margin-top: 10px; font-size: 0.9em;">
-                                    <strong>Prioritas:</strong> ${rec.priority.toUpperCase()} | 
-                                    <strong>PIC:</strong> ${rec.pic}
+                                <div class="result-confidence">Confidence: ${confidence}% (${rec.confidence_level})</div>
+                                ${data.location ? `<div style="margin-top: 10px;">📍 Lokasi: <strong>${data.location}</strong></div>` : ''}
+                            </div>
+
+                            <div class="probabilities" style="margin-top: 20px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <h3 style="color: #667eea; margin-bottom: 15px;">📊 Probabilitas Klasifikasi:</h3>
+                    `;
+
+                    const probs = Object.entries(pred.probabilities).sort((a, b) => b[1] - a[1]);
+                    probs.forEach(([className, prob]) => {
+                        const percentage = (prob * 100).toFixed(1);
+                        html += `
+                            <div class="prob-item" style="margin-bottom: 10px;">
+                                <div class="prob-label" style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="font-weight: 500;">${className}</span>
+                                    <span style="font-weight: bold; color: #667eea;">${percentage}%</span>
                                 </div>
+                                <div class="prob-bar" style="background: #e0e0e0; border-radius: 10px; height: 8px; overflow: hidden;">
+                                    <div class="prob-fill" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%; width: ${percentage}%; transition: width 0.3s;"></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+
+                            <div class="recommendation" style="background: #f8f9ff; padding: 20px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #667eea;">
+                                <h3 style="color: #667eea; margin-bottom: 15px;">📋 Rekomendasi untuk ${rec.campus}</h3>
+                                <p style="margin: 8px 0;"><strong>⏰ Waktu Deteksi:</strong> ${formatTimestampDisplay(data.timestamp)} WIB</p>
+                                ${data.location ? `<p style="margin: 8px 0;"><strong>📍 Lokasi:</strong> ${data.location}</p>` : ''}
+                                ${data.gps ? `<p style="margin: 8px 0;"><strong>🌍 GPS:</strong> <a href="https://www.google.com/maps?q=${data.gps.latitude},${data.gps.longitude}" target="_blank" style="color: #667eea;">Lihat di Google Maps</a></p>` : ''}
+                                <p style="margin: 8px 0;"><strong>Status:</strong> ${rec.message}</p>
+                                <p style="margin: 8px 0;"><strong>Tindakan:</strong> ${rec.action}</p>
+                                <p style="margin: 8px 0;"><strong>Prioritas:</strong> <span style="color: ${rec.priority === 'high' ? '#dc3545' : rec.priority === 'medium' ? '#ffc107' : '#28a745'}; font-weight: bold;">${rec.priority.toUpperCase()}</span></p>
+                                <p style="margin: 8px 0;"><strong>PIC:</strong> ${rec.pic}</p>
                             </div>
                         </div>
                     `;
