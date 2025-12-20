@@ -545,7 +545,7 @@
                 padding: 20px;
             `;
             
-            // Build detection list HTML
+            // Build detection list HTML with images
             let detectionsHTML = '';
             detections.forEach((data, index) => {
                 const statusClass = getStatusClass(data.class);
@@ -553,29 +553,72 @@
                 
                 detectionsHTML += `
                     <div style="
-                        background: #f8f9fa;
-                        padding: 15px;
-                        border-radius: 10px;
-                        margin-bottom: 15px;
-                        border-left: 4px solid ${statusColors[statusClass]};
+                        background: white;
+                        border: 2px solid ${statusColors[statusClass]};
+                        border-radius: 12px;
+                        margin-bottom: 20px;
+                        overflow: hidden;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                     ">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <!-- Image with heatmap -->
+                        <div style="
+                            position: relative;
+                            width: 100%;
+                            background: #000;
+                            cursor: pointer;
+                        " onclick="window.open('${data.heatmap_url || data.image_url}', '_blank')">
+                            <img src="${data.heatmap_url || data.image_url}" 
+                                 alt="Deteksi ${data.class}"
+                                 style="
+                                     width: 100%;
+                                     height: auto;
+                                     display: block;
+                                     max-height: 300px;
+                                     object-fit: contain;
+                                 "
+                                 onerror="this.src='${data.image_url}'">
                             <div style="
-                                display: inline-block;
-                                background: ${statusColors[statusClass]};
+                                position: absolute;
+                                top: 10px;
+                                right: 10px;
+                                background: rgba(0,0,0,0.7);
                                 color: white;
-                                padding: 5px 15px;
-                                border-radius: 20px;
-                                font-weight: bold;
-                                font-size: 0.9em;
-                            ">${data.class}</div>
-                            <div style="color: #666; font-size: 0.85em;">${formatTimestamp(data.timestamp)} WIB</div>
+                                padding: 5px 10px;
+                                border-radius: 5px;
+                                font-size: 0.8em;
+                            ">🔍 Klik untuk perbesar</div>
                         </div>
-                        <div style="color: #555; font-size: 0.9em; margin-bottom: 8px;">
-                            <strong>Confidence:</strong> ${confidence}%
-                        </div>
-                        <div style="color: #555; font-size: 0.85em;">
-                            <strong>Tindakan:</strong> ${data.recommendation.action}
+                        
+                        <!-- Info -->
+                        <div style="padding: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="
+                                    display: inline-block;
+                                    background: ${statusColors[statusClass]};
+                                    color: white;
+                                    padding: 6px 16px;
+                                    border-radius: 20px;
+                                    font-weight: bold;
+                                    font-size: 0.95em;
+                                ">${data.class}</div>
+                                <div style="color: #666; font-size: 0.85em;">
+                                    📅 ${formatTimestamp(data.timestamp)} WIB
+                                </div>
+                            </div>
+                            
+                            <div style="
+                                background: #f8f9fa;
+                                padding: 10px;
+                                border-radius: 8px;
+                                margin-bottom: 10px;
+                            ">
+                                <div style="color: #555; font-size: 0.9em; margin-bottom: 5px;">
+                                    <strong>📊 Confidence:</strong> ${confidence}%
+                                </div>
+                                <div style="color: #555; font-size: 0.85em;">
+                                    <strong>⚡ Tindakan:</strong> ${data.recommendation.action}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;

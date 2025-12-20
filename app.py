@@ -755,7 +755,9 @@ class WasteDetectionApp:
                     'class': log['prediction']['class'],
                     'confidence': log['prediction']['confidence'],
                     'timestamp': log['timestamp'],
-                    'recommendation': log['recommendation']
+                    'recommendation': log['recommendation'],
+                    'image_url': log.get('image_url', ''),
+                    'heatmap_url': log.get('heatmap_url', '')
                 })
             
             # Flatten to list (all detections)
