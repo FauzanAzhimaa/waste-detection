@@ -173,13 +173,17 @@ class YOLODetector:
             
             result = results[0]
             
-            # Extract detections
+            # Extract detections (convert numpy to Python native types)
             detections = []
             for box in result.boxes:
+                bbox = box.xyxy[0].cpu().numpy().tolist()  # Convert tensor to list
+                conf = float(box.conf.cpu().numpy()[0])  # Convert tensor to float
+                cls = int(box.cls.cpu().numpy()[0])  # Convert tensor to int
+                
                 detections.append({
-                    'class': result.names[int(box.cls)],
-                    'confidence': float(box.conf),
-                    'bbox': box.xyxy[0].tolist(),  # [x1, y1, x2, y2]
+                    'class': result.names[cls],
+                    'confidence': conf,
+                    'bbox': bbox,  # [x1, y1, x2, y2]
                 })
             
             # Get image with bounding boxes drawn
@@ -188,7 +192,7 @@ class YOLODetector:
             return {
                 'count': len(detections),
                 'detections': detections,
-                'image_with_boxes': image_with_boxes
+                'image_with_boxes': image_with_boxes  # This will be saved as image, not serialized
             }
         except Exception as e:
             print(f"❌ YOLO detection error: {e}")
@@ -664,6 +668,15 @@ class WasteDetectionApp:
                     traceback.print_exc()
             
             # Save detection log (database or JSON)
+            # Prepare YOLO data for JSON (exclude numpy array)
+            yolo_data_for_log = None
+            if yolo_result:
+                yolo_data_for_log = {
+                    'count': yolo_result['count'],
+                    'detections': yolo_result['detections'],
+                    'bbox_image_url': yolo_result.get('bbox_image_url')
+                }
+            
             log_data = {
                 'timestamp': timestamp_dt,
                 'location': location,
@@ -675,8 +688,8 @@ class WasteDetectionApp:
                 'prediction': result,
                 'recommendation': recommendation,
                 'campus': Config.CAMPUS_SHORT,
-                # YOLO detection data
-                'yolo_detection': yolo_result,
+                # YOLO detection data (without numpy array)
+                'yolo_detection': yolo_data_for_log,
                 'object_count': yolo_result['count'] if yolo_result else 0,
                 'bbox_image_url': yolo_result.get('bbox_image_url') if yolo_result else None,
                 'bbox_filename': bbox_filename,
@@ -729,8 +742,8 @@ class WasteDetectionApp:
                 'timestamp': timestamp,
                 'campus': Config.CAMPUS_SHORT,
                 'using_database': Config.USE_DATABASE,
-                # YOLO object detection results
-                'yolo_detection': yolo_result,
+                # YOLO object detection results (without numpy array)
+                'yolo_detection': yolo_data_for_log,
                 'object_count': yolo_result['count'] if yolo_result else 0,
                 'bbox_image_url': yolo_result.get('bbox_image_url') if yolo_result else None,
                 # Model performance info - honest assessment

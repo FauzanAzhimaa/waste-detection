@@ -618,16 +618,24 @@
             // Use Cloudinary URLs if available, otherwise fallback to local
             const imageUrl = data.image_url || `/uploads/${data.filename}?t=${timestamp}`;
             const heatmapUrl = data.heatmap_url || (data.heatmap_filename ? `/uploads/${data.heatmap_filename}?t=${timestamp}` : null);
+            const bboxUrl = data.bbox_image_url || null;
             
-            if (heatmapUrl) {
-                heatmapComparison.classList.add('active');
-                heatmapComparison.innerHTML = `
-                    <div class="heatmap-box">
-                        <div class="heatmap-image-container">
-                            <img src="${imageUrl}" alt="Original" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>Gambar tidak tersedia</text></svg>';">
-                        </div>
-                        <div class="heatmap-label">📸 Gambar Original</div>
+            // Build heatmap comparison HTML
+            let comparisonHTML = '';
+            
+            // Original image
+            comparisonHTML += `
+                <div class="heatmap-box">
+                    <div class="heatmap-image-container">
+                        <img src="${imageUrl}" alt="Original" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>Gambar tidak tersedia</text></svg>';">
                     </div>
+                    <div class="heatmap-label">📸 Gambar Original</div>
+                </div>
+            `;
+            
+            // Heatmap
+            if (heatmapUrl) {
+                comparisonHTML += `
                     <div class="heatmap-box">
                         <div class="heatmap-image-container">
                             <img src="${heatmapUrl}" alt="Heatmap" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>Heatmap tidak tersedia</text></svg>';">
@@ -635,6 +643,23 @@
                         <div class="heatmap-label">🔥 Heatmap AI Focus</div>
                     </div>
                 `;
+            }
+            
+            // YOLO Bounding Boxes
+            if (bboxUrl && data.object_count > 0) {
+                comparisonHTML += `
+                    <div class="heatmap-box">
+                        <div class="heatmap-image-container">
+                            <img src="${bboxUrl}" alt="Object Detection" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>Detection tidak tersedia</text></svg>';">
+                        </div>
+                        <div class="heatmap-label">🎯 Object Detection (${data.object_count} objek)</div>
+                    </div>
+                `;
+            }
+            
+            if (comparisonHTML) {
+                heatmapComparison.classList.add('active');
+                heatmapComparison.innerHTML = comparisonHTML;
             } else if (data.heatmap_error) {
                 // Show only original image if heatmap failed
                 heatmapComparison.classList.add('active');
