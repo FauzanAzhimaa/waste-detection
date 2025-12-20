@@ -465,7 +465,7 @@
         </div>
 
         <div class="card">
-            <div class="location-section">
+            <div class="location-section" id="locationInputSection">
                 <label for="locationInput">📍 Lokasi di Kampus 1 UNJAYA (Opsional):</label>
                 <input 
                     type="text" 
@@ -523,6 +523,25 @@
 
                 <div class="bottom-section" id="bottomSection">
                     <button class="back-btn" onclick="resetView()">Analisis Gambar Baru</button>
+                    
+                    <!-- Location Display -->
+                    <div id="locationDisplay" style="
+                        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+                        border-left: 4px solid #ffc107;
+                        padding: 18px 20px;
+                        border-radius: 10px;
+                        margin-bottom: 20px;
+                        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+                        display: none;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 1.5em;">📍</span>
+                            <div>
+                                <strong style="color: #856404; font-size: 1.05em;">Lokasi Deteksi:</strong>
+                                <div id="locationText" style="color: #333; font-size: 1.1em; margin-top: 5px; font-weight: 600;"></div>
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- Info Box -->
                     <div style="
@@ -660,9 +679,18 @@
             const statusClass = rec.status;
             const confidence = (pred.confidence * 100).toFixed(1);
 
-            // Hide top section, show bottom section
+            // Hide top section and location input, show bottom section
             topSection.style.display = 'none';
+            document.getElementById('locationInputSection').style.display = 'none';
             bottomSection.classList.add('active');
+            
+            // Show location display
+            const locationDisplay = document.getElementById('locationDisplay');
+            const locationText = document.getElementById('locationText');
+            if (data.location && data.location !== 'Lokasi tidak diketahui') {
+                locationText.textContent = data.location;
+                locationDisplay.style.display = 'block';
+            }
 
             // Show heatmap comparison
             const timestamp = new Date().getTime(); // Cache busting
@@ -827,12 +855,15 @@
 
         function resetView() {
             topSection.style.display = 'flex';
+            document.getElementById('locationInputSection').style.display = 'block';
+            document.getElementById('locationDisplay').style.display = 'none';
             bottomSection.classList.remove('active');
             uploadArea.style.display = 'block';
             heatmapComparison.classList.remove('active');
             result.innerHTML = '';
             fileInput.value = '';
             cameraInput.value = '';
+            document.getElementById('locationInput').value = '';
         }
     </script>
 </body>
