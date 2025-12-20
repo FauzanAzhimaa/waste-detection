@@ -504,11 +504,12 @@
                     <div class="upload-area" id="uploadArea">
                         <div class="upload-icon">📸</div>
                         <h3>Klik atau Drag & Drop Gambar</h3>
-                        <p>Format: JPG, PNG, WEBP (Max 16MB)</p>
-                        <input type="file" id="fileInput" accept="image/*">
+                        <p>Format: JPG, PNG, WEBP (Max 16MB per file)</p>
+                        <p style="color: #667eea; font-weight: bold; margin-top: 5px;">✨ Upload multiple gambar sekaligus!</p>
+                        <input type="file" id="fileInput" accept="image/*" multiple>
                         <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
                         <button class="btn" onclick="document.getElementById('fileInput').click()">
-                            📁 Pilih Gambar
+                            📁 Pilih Gambar (Multiple)
                         </button>
                         <button class="btn" onclick="document.getElementById('cameraInput').click()" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); margin-left: 10px;">
                             📷 Buka Kamera
@@ -600,13 +601,13 @@
             uploadArea.classList.remove('dragover');
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                handleFile(files[0]);
+                handleFiles(files);
             }
         });
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
+                handleFiles(e.target.files);
             }
         });
 
@@ -618,6 +619,26 @@
             }
         });
 
+        function handleFiles(files) {
+            // Convert FileList to Array
+            const fileArray = Array.from(files);
+            
+            // Validate all files
+            const invalidFiles = fileArray.filter(f => !f.type.startsWith('image/'));
+            if (invalidFiles.length > 0) {
+                alert(`${invalidFiles.length} file bukan gambar dan akan diabaikan`);
+            }
+            
+            const validFiles = fileArray.filter(f => f.type.startsWith('image/'));
+            if (validFiles.length === 0) {
+                alert('Tidak ada file gambar yang valid!');
+                return;
+            }
+
+            uploadArea.style.display = 'none';
+            uploadAndPredictMultiple(validFiles);
+        }
+
         function handleFile(file) {
             if (!file.type.startsWith('image/')) {
                 alert('File harus berupa gambar!');
@@ -625,49 +646,82 @@
             }
 
             uploadArea.style.display = 'none';
-            uploadAndPredict(file);
+            uploadAndPredictMultiple([file]);
         }
 
-        function uploadAndPredict(file) {
+        async function uploadAndPredictMultiple(files) {
             const location = document.getElementById('locationInput').value.trim();
-            const formData = new FormData();
-            formData.append('file', file);
-            if (location) {
-                formData.append('location', location);
+            
+            loading.classList.add('active');
+            result.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <h3>📤 Mengupload ${files.length} gambar...</h3>
+                    <div id="uploadProgress"></div>
+                </div>
+            `;
+
+            const progressDiv = document.getElementById('uploadProgress');
+            const results = [];
+
+            // Process each file sequentially
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                progressDiv.innerHTML = `
+                    <p style="margin: 10px 0;">
+                        Memproses gambar ${i + 1} dari ${files.length}: <strong>${file.name}</strong>
+                    </p>
+                    <div style="background: #e0e0e0; border-radius: 10px; height: 20px; overflow: hidden;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%; width: ${((i + 1) / files.length * 100)}%; transition: width 0.3s;"></div>
+                    </div>
+                `;
+
+                try {
+                    const result = await uploadSingleFile(file, location);
+                    results.push({ success: true, file: file.name, data: result });
+                } catch (error) {
+                    results.push({ success: false, file: file.name, error: error.message });
+                }
             }
 
-            loading.classList.add('active');
-            result.innerHTML = '';
+            loading.classList.remove('active');
+            displayMultipleResults(results);
+        }
 
-            // Tambah timeout 120 detik untuk Railway
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 120000);
+        function uploadSingleFile(file, location) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                if (location) {
+                    formData.append('location', location);
+                }
 
-            fetch('/predict', {
-                method: 'POST',
-                body: formData,
-                signal: controller.signal
-            })
-            .then(response => {
-                clearTimeout(timeoutId);
-                return response.json();
-            })
-            .then(data => {
-                loading.classList.remove('active');
-                if (data.success) {
-                    displayResult(data);
-                } else {
-                    alert('Error: ' + (data.error || 'Terjadi kesalahan'));
-                }
-            })
-            .catch(error => {
-                clearTimeout(timeoutId);
-                loading.classList.remove('active');
-                if (error.name === 'AbortError') {
-                    alert('Timeout: Proses terlalu lama. Coba dengan gambar yang lebih kecil.');
-                } else {
-                    alert('Gagal menghubungi server: ' + error.message);
-                }
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 120000);
+
+                fetch('/predict', {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                })
+                .then(response => {
+                    clearTimeout(timeoutId);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        resolve(data);
+                    } else {
+                        reject(new Error(data.error || 'Terjadi kesalahan'));
+                    }
+                })
+                .catch(error => {
+                    clearTimeout(timeoutId);
+                    if (error.name === 'AbortError') {
+                        reject(new Error('Timeout: Proses terlalu lama'));
+                    } else {
+                        reject(error);
+                    }
+                });
             });
         }
 
@@ -809,6 +863,137 @@
                 </div>
             `;
 
+            result.innerHTML = html;
+        }
+
+        function displayMultipleResults(results) {
+            console.log('📊 Multiple Results:', results);
+            
+            // Hide top section and location input, show bottom section
+            topSection.style.display = 'none';
+            document.getElementById('locationInputSection').style.display = 'none';
+            bottomSection.classList.add('active');
+            
+            // Show location display if set
+            const location = document.getElementById('locationInput').value.trim();
+            const locationDisplay = document.getElementById('locationDisplay');
+            const locationText = document.getElementById('locationText');
+            if (location && location !== 'Lokasi tidak diketahui') {
+                locationText.textContent = location;
+                locationDisplay.style.display = 'block';
+            } else {
+                locationDisplay.style.display = 'none';
+            }
+            
+            // Count statistics
+            const successCount = results.filter(r => r.success).length;
+            const failCount = results.filter(r => !r.success).length;
+            const bersihCount = results.filter(r => r.success && r.data.prediction.class === 'Bersih').length;
+            const ringanCount = results.filter(r => r.success && r.data.prediction.class === 'Tumpukan Ringan').length;
+            const parahCount = results.filter(r => r.success && r.data.prediction.class === 'Tumpukan Parah').length;
+            const totalObjects = results.filter(r => r.success).reduce((sum, r) => sum + (r.data.object_count || 0), 0);
+            
+            let html = `
+                <div style="background: white; padding: 25px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <h2 style="color: #667eea; margin-bottom: 20px; text-align: center;">
+                        📊 Hasil Analisis ${results.length} Gambar
+                    </h2>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold;">${successCount}</div>
+                            <div style="font-size: 0.9em; opacity: 0.9;">Berhasil</div>
+                        </div>
+                        ${failCount > 0 ? `
+                        <div style="background: #dc3545; color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold;">${failCount}</div>
+                            <div style="font-size: 0.9em; opacity: 0.9;">Gagal</div>
+                        </div>
+                        ` : ''}
+                        <div style="background: #28a745; color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold;">${bersihCount}</div>
+                            <div style="font-size: 0.9em; opacity: 0.9;">Bersih</div>
+                        </div>
+                        <div style="background: #ffc107; color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold;">${ringanCount}</div>
+                            <div style="font-size: 0.9em; opacity: 0.9;">Ringan</div>
+                        </div>
+                        <div style="background: #dc3545; color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold;">${parahCount}</div>
+                            <div style="font-size: 0.9em; opacity: 0.9;">Parah</div>
+                        </div>
+                        <div style="background: #17a2b8; color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 2em; font-weight: bold;">${totalObjects}</div>
+                            <div style="font-size: 0.9em; opacity: 0.9;">Total Objek</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Display each result
+            results.forEach((item, index) => {
+                if (item.success) {
+                    const data = item.data;
+                    const pred = data.prediction;
+                    const rec = data.recommendation;
+                    const statusClass = rec.status;
+                    const confidence = (pred.confidence * 100).toFixed(1);
+                    
+                    html += `
+                        <div style="background: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">
+                                ${index + 1}. ${item.file}
+                            </h3>
+                            
+                            <div class="heatmap-comparison">
+                                <div class="heatmap-item">
+                                    <div class="heatmap-image">
+                                        <img src="${data.image_url}" alt="Original">
+                                    </div>
+                                    <div class="heatmap-label">📷 Gambar Original</div>
+                                </div>
+                                
+                                ${data.heatmap_url ? `
+                                <div class="heatmap-item">
+                                    <div class="heatmap-image">
+                                        <img src="${data.heatmap_url}" alt="Heatmap">
+                                    </div>
+                                    <div class="heatmap-label">🔥 Density Heatmap (YOLO)</div>
+                                </div>
+                                ` : ''}
+                                
+                                ${data.bbox_image_url ? `
+                                <div class="heatmap-item" style="border: 3px solid #28a745;">
+                                    <div class="heatmap-image">
+                                        <img src="${data.bbox_image_url}" alt="YOLO Detection">
+                                    </div>
+                                    <div class="heatmap-label" style="background: #28a745;">🎯 YOLO Detection (${data.object_count || 0} objek)</div>
+                                </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="result-box ${statusClass}" style="margin-top: 20px;">
+                                <div class="result-title">${pred.class}</div>
+                                <div class="result-confidence">Confidence: ${confidence}%</div>
+                                <div style="margin-top: 10px; font-size: 0.9em;">
+                                    <strong>Prioritas:</strong> ${rec.priority.toUpperCase()} | 
+                                    <strong>PIC:</strong> ${rec.pic}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="background: #f8d7da; border-left: 5px solid #dc3545; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h3 style="color: #721c24; margin-bottom: 10px;">
+                                ${index + 1}. ${item.file} - ❌ Gagal
+                            </h3>
+                            <p style="color: #721c24;">Error: ${item.error}</p>
+                        </div>
+                    `;
+                }
+            });
+            
             result.innerHTML = html;
         }
 
