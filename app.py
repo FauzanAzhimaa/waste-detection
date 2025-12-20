@@ -816,6 +816,9 @@ class WasteDetectionApp:
             predicted_class = result['class']
             confidence = result['confidence']
             
+            # Initialize recommendation with classification result (fallback)
+            recommendation = self.model_handler.get_recommendation(predicted_class, confidence)
+            
             # YOLO-BASED OVERRIDE: Use YOLO detection with spatial analysis
             yolo_override = None
             yolo_based_class = None
