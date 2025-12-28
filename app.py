@@ -90,21 +90,34 @@ class ImageMetadataExtractor:
         """Extract GPS coordinates from image EXIF data"""
         try:
             image = Image.open(image_path)
-            exif_data = image._getexif()
+            
+            # Try to get EXIF data
+            exif_data = None
+            if hasattr(image, '_getexif'):
+                exif_data = image._getexif()
+            elif hasattr(image, 'getexif'):
+                exif_data = image.getexif()
             
             if not exif_data:
+                print("  ℹ️ No EXIF data found in image")
                 return None
             
+            # Look for GPS info
             gps_info = {}
             for tag, value in exif_data.items():
                 tag_name = TAGS.get(tag, tag)
                 if tag_name == 'GPSInfo':
+                    # GPS info found
                     for gps_tag in value:
                         gps_tag_name = GPSTAGS.get(gps_tag, gps_tag)
                         gps_info[gps_tag_name] = value[gps_tag]
+                    break
             
             if not gps_info:
+                print("  ℹ️ No GPS info in EXIF data")
                 return None
+            
+            print(f"  📍 GPS Info found: {list(gps_info.keys())}")
             
             # Convert GPS data to decimal degrees
             lat = ImageMetadataExtractor._convert_to_degrees(gps_info.get('GPSLatitude'))
@@ -120,9 +133,11 @@ class ImageMetadataExtractor:
                     lon = -lon
                 
                 return {'latitude': lat, 'longitude': lon}
+            else:
+                print("  ⚠️ GPS coordinates incomplete")
             
         except Exception as e:
-            print(f"GPS extraction error: {e}")
+            print(f"  ❌ GPS extraction error: {e}")
         
         return None
     
@@ -657,11 +672,20 @@ class WasteDetectionApp:
             # Try to extract GPS from image if location not provided
             gps_data = None
             if not location:
+                print(f"📍 Attempting GPS extraction from image metadata...")
                 gps_data = ImageMetadataExtractor.get_gps_data(temp_filepath)
                 if gps_data:
                     location = f"GPS: {gps_data['latitude']:.6f}, {gps_data['longitude']:.6f}"
+                    print(f"✓ GPS detected: {location}")
                 else:
                     location = "Lokasi tidak diketahui"
+                    print(f"⚠️ No GPS data found in image metadata")
+            else:
+                print(f"📍 Location provided by user: {location}")
+                # Still try to extract GPS even if location is provided
+                gps_data = ImageMetadataExtractor.get_gps_data(temp_filepath)
+                if gps_data:
+                    print(f"✓ GPS also detected: {gps_data['latitude']:.6f}, {gps_data['longitude']:.6f}")
             
             # Make prediction
             result = self.model_handler.predict(temp_filepath)
